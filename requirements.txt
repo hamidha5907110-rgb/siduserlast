@@ -1,0 +1,6 @@
+telethon
+python-telegram-bot
+requests
+qrcode
+gtts
+yt-dlp
