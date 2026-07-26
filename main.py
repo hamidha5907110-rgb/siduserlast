@@ -6006,10 +6006,10 @@ else:
     import os
     import sys
     BOT_TOKEN         = "8679232069:AAGqxT86g_3EdYo-n6MCF1ZdEhWUA6ObVn8"  # ← replace with your bot token
-    OWNER_ID          = 2119464081            # ← replace with your Telegram ID
+    OWNER_ID          = 2119464081             # ← replace with your Telegram ID
     SUPPORT_USERNAME  = "@fxrsale"
     MAX_USERBOTS      = int(os.environ.get("MAX_USERBOTS", "50") or "50")
-    TELEGRAM_API_ID   = 38843772                  # ← replace with your API ID
+    TELEGRAM_API_ID   =  38843772                   # ← replace with your API ID
     TELEGRAM_API_HASH = "875fbb273801c8025d05e98173fca536"  # ← replace with your API hash
 
     # ════════════════════════════════════════════════════════════════
@@ -6425,7 +6425,7 @@ else:
     #   /start
     # ════════════════════════════════════════════════════════════════════════════════
 
-async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not await check_blocked(update): return
         uid  = update.effective_user.id
         name = update.effective_user.first_name or "User"
@@ -6478,6 +6478,7 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             text, parse_mode=ParseMode.MARKDOWN,
             reply_markup=InlineKeyboardMarkup(keyboard),
         )
+
 
     # ════════════════════════════════════════════════════════════════════════════════
     #   /help
