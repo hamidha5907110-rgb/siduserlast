@@ -6426,74 +6426,58 @@ else:
     # ════════════════════════════════════════════════════════════════════════════════
 
 async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not await check_blocked(update): return
-    uid  = update.effective_user.id
-    name = update.effective_user.first_name or "User"
+        if not await check_blocked(update): return
+        uid  = update.effective_user.id
+        name = update.effective_user.first_name or "User"
 
-    if not db.user_exists(uid):
-        db.save_user_meta(uid, {"first_name": name, "joined_at": int(time.time())})
+        if not db.user_exists(uid):
+            db.save_user_meta(uid, {"first_name": name, "joined_at": int(time.time())})
 
-    accounts = db.get_accounts(uid)
-    hosted   = [a for a in accounts if a.get("hosted")]
-    running  = [a for a in hosted if runner.is_running(uid, a["slot"])]
+        accounts = db.get_accounts(uid)
+        hosted   = [a for a in accounts if a.get("hosted")]
+        running  = [a for a in hosted if runner.is_running(uid, a["slot"])]
 
-    if hosted:
-        status_line = (
-            f"\n📱 {fraktur('Accounts')} : {mono(str(len(hosted)))} hosted  "
-            f"| {mono(str(len(running)))} running"
-        )
-    else:
-        status_line = f"\n⚪ {fraktur('Userbot')}: {italic_serif('Not hosted yet')}"
-
-    keyboard = [
-        [
-            InlineKeyboardButton("🚀  𝗛𝗼𝘀𝘁 𝗠𝘆 𝗨𝘀𝗲𝗿𝗯𝗼𝘁", callback_data="host"),
-            InlineKeyboardButton("📋  𝗖𝗼𝗺𝗺𝗮𝗻𝗱𝘀",        callback_data="commands"),
-        ],
-        [
-            InlineKeyboardButton("📊  𝗦𝘁𝗮𝘁𝘂𝘀",   callback_data="status"),
-            InlineKeyboardButton("🗑️  𝗟𝗼𝗴𝗼𝘂𝘁",   callback_data="menu_logout"),
-        ],
-        [
-            InlineKeyboardButton("📞  𝗦𝘂𝗽𝗽𝗼𝗿𝘁",          callback_data="support"),
-            InlineKeyboardButton("❓  𝗛𝗲𝗹𝗽 & 𝗚𝘂𝗶𝗱𝗲", callback_data="help"),
-        ],
-    ]
-
-    text = (
-        f"{TOP}\n"
-        f"║  🤖  {double_struck('SID Premium Hoster')}  🤖  ║\n"
-        f"{BOT}\n\n"
-        f"🌟 {script('Welcome back')}, {bold_serif(name)}!\n\n"
-        f"{DIV}\n"
-        f"⚡ {sans_bold('Version')}  : {mono('Advance V3')}\n"
-        f"📦 {sans_bold('Commands')} : {mono('500+')}\n"
-        f"⚔️ {sans_bold('Raids')}    : {mono('20 Types  1000+ Texts')}\n"
-        f"{DIV}\n"
-        f"🪪 {fraktur('Your ID')} : `{uid}`"
-        f"{status_line}\n\n"
-        f"{italic_serif('Select an option below')} 👇"
-    )
-
-    # --- SEND VIDEO FRAME + CAPTION + BUTTONS ---
-    video_path = "welcome.mp4"          # change to your video file name
-    try:
-        with open(video_path, "rb") as video_file:
-            await update.message.reply_video(
-                video=video_file,
-                caption=text,
-                parse_mode=ParseMode.MARKDOWN,
-                reply_markup=InlineKeyboardMarkup(keyboard),
-                supports_streaming=True,
+        if hosted:
+            status_line = (
+                f"\n📱 {fraktur('Accounts')} : {mono(str(len(hosted)))} hosted  "
+                f"| {mono(str(len(running)))} running"
             )
-    except FileNotFoundError:
-        # fallback to text-only if video missing
+        else:
+            status_line = f"\n⚪ {fraktur('Userbot')}: {italic_serif('Not hosted yet')}"
+
+        keyboard = [
+            [
+                InlineKeyboardButton("🚀  𝗛𝗼𝘀𝘁 𝗠𝘆 𝗨𝘀𝗲𝗿𝗯𝗼𝘁", callback_data="host"),
+                InlineKeyboardButton("📋  𝗖𝗼𝗺𝗺𝗮𝗻𝗱𝘀",        callback_data="commands"),
+            ],
+            [
+                InlineKeyboardButton("📊  𝗦𝘁𝗮𝘁𝘂𝘀",   callback_data="status"),
+                InlineKeyboardButton("🗑️  𝗟𝗼𝗴𝗼𝘂𝘁",   callback_data="menu_logout"),
+            ],
+            [
+                InlineKeyboardButton("📞  𝗦𝘂𝗽𝗽𝗼𝗿𝘁",          callback_data="support"),
+                InlineKeyboardButton("❓  𝗛𝗲𝗹𝗽 & 𝗚𝘂𝗶𝗱𝗲", callback_data="help"),
+            ],
+        ]
+
+        text = (
+            f"{TOP}\n"
+            f"║  🤖  {double_struck('SID Premium Hoster')}  🤖  ║\n"
+            f"{BOT}\n\n"
+            f"🌟 {script('Welcome back')}, {bold_serif(name)}!\n\n"
+            f"{DIV}\n"
+            f"⚡ {sans_bold('Version')}  : {mono('Advance V3')}\n"
+            f"📦 {sans_bold('Commands')} : {mono('500+')}\n"
+            f"⚔️ {sans_bold('Raids')}    : {mono('20 Types  1000+ Texts')}\n"
+            f"{DIV}\n"
+            f"🪪 {fraktur('Your ID')} : `{uid}`"
+            f"{status_line}\n\n"
+            f"{italic_serif('Select an option below')} 👇"
+        )
         await update.message.reply_text(
-            text,
-            parse_mode=ParseMode.MARKDOWN,
+            text, parse_mode=ParseMode.MARKDOWN,
             reply_markup=InlineKeyboardMarkup(keyboard),
         )
-
 
     # ════════════════════════════════════════════════════════════════════════════════
     #   /help
