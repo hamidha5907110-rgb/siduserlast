@@ -6005,12 +6005,12 @@ else:
     # ════════════════════════════════════════════════════════════════
     import os
     import sys
-    BOT_TOKEN         = "YAHA BOT TOKEN DALO "  # ← replace with your bot token
-    OWNER_ID          = 123456789               # ← replace with your Telegram ID
-    SUPPORT_USERNAME  = "@YourSupportUsername"
+    BOT_TOKEN         = "6248614957:AAGII_pN7RJiz6xxuTV-4zf9KGt2_s6ncYU "  # ← replace with your bot token
+    OWNER_ID          = 2119464081            # ← replace with your Telegram ID
+    SUPPORT_USERNAME  = "@fxrsale"
     MAX_USERBOTS      = int(os.environ.get("MAX_USERBOTS", "50") or "50")
-    TELEGRAM_API_ID   = 2040                    # ← replace with your API ID
-    TELEGRAM_API_HASH = "b18441a1ff607e10a989891a5462e627"  # ← replace with your API hash
+    TELEGRAM_API_ID   = 38843772                  # ← replace with your API ID
+    TELEGRAM_API_HASH = "875fbb273801c8025d05e98173fca536"  # ← replace with your API hash
 
     # ════════════════════════════════════════════════════════════════
     #   INLINE DATABASE — JSON file-based storage in ./data/
