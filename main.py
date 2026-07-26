@@ -6005,7 +6005,7 @@ else:
     # ════════════════════════════════════════════════════════════════
     import os
     import sys
-    BOT_TOKEN         = "6248614957:AAHjG17zgjZA2b9IYxjrPAJ4AsV7IH55TUM "  # ← replace with your bot token
+    BOT_TOKEN         = "8679232069:AAGqxT86g_3EdYo-n6MCF1ZdEhWUA6ObVn8"  # ← replace with your bot token
     OWNER_ID          = 2119464081            # ← replace with your Telegram ID
     SUPPORT_USERNAME  = "@fxrsale"
     MAX_USERBOTS      = int(os.environ.get("MAX_USERBOTS", "50") or "50")
