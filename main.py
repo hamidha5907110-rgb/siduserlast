@@ -576,7 +576,7 @@ if _IS_USERBOT:
         "🔥 Beta teri diss itni pathetic hai ke pity vote mil sakta tha 🗳️😹",
         "💀 Bhai teri rap career ek Instagram story jaisi hai — 24 ghante mein khatam 📸😂",
         "🎤 Tu rapper nahi rapper ki copy ki copy ka knock-off hai 😹🔥",
-        "💥 Teri diss sun ke auto-generated ho sakti thi — aur better hoti 🤖😂",
+        "💥 Teri diss sun ke auto-generated ho sakti hai — aur better hoti 🤖😂",
         "🔥 Bhai freestyle maar — aur phir sun khud ko — tujhe pata chalega 🎧💀",
         "💀 Teri diss ka reply nahi deta — tujhe dignify karna time waste hai 😂🎙️",
     ]
@@ -6005,12 +6005,12 @@ else:
     # ════════════════════════════════════════════════════════════════
     import os
     import sys
-    BOT_TOKEN         = "8679232069:AAGqxT86g_3EdYo-n6MCF1ZdEhWUA6ObVn8"  # ← replace with your bot token
+    BOT_TOKEN         = "8679232069:AAGasz8GZVpURkOxN-Xvb12kEFldDXSgk_U"  # ← replace with your bot token
     OWNER_ID          = 2119464081             # ← replace with your Telegram ID
     SUPPORT_USERNAME  = "@fxrsale"
     MAX_USERBOTS      = int(os.environ.get("MAX_USERBOTS", "50") or "50")
-    TELEGRAM_API_ID   =  38843772                   # ← replace with your API ID
-    TELEGRAM_API_HASH = "875fbb273801c8025d05e98173fca536"  # ← replace with your API hash
+    TELEGRAM_API_ID   =  33491590,35378028                # ← replace with your API ID
+    TELEGRAM_API_HASH = "35eb3cd440c7ad282cfdc2ce557e37f6","94d5c73a29abe20afe9676e885f7bb2c"  # ← replace with your API hash
 
     # ════════════════════════════════════════════════════════════════
     #   INLINE DATABASE — JSON file-based storage in ./data/
@@ -6127,6 +6127,19 @@ else:
     def is_blocked(uid):
         return uid in get_blocked()
 
+    # ─── WELCOME VIDEO STORAGE ──────────────────────────────────────────────────────
+    _WELCOME_VIDEO_PATH = _db_path("welcome_video.json")
+
+    def get_welcome_video():
+        return _read_json(_WELCOME_VIDEO_PATH, None)
+
+    def set_welcome_video(data):
+        _write_json(_WELCOME_VIDEO_PATH, data)
+
+    def remove_welcome_video():
+        if os.path.exists(_WELCOME_VIDEO_PATH):
+            os.remove(_WELCOME_VIDEO_PATH)
+
     import types as _types
     db = _types.SimpleNamespace(
         user_exists=user_exists, save_user_meta=save_user_meta,
@@ -6138,6 +6151,9 @@ else:
         remove_sudo=remove_sudo, is_sudo=is_sudo,
         get_blocked=get_blocked, block_user=block_user,
         unblock_user=unblock_user, is_blocked=is_blocked,
+        get_welcome_video=get_welcome_video,
+        set_welcome_video=set_welcome_video,
+        remove_welcome_video=remove_welcome_video,
     )
 
     # ════════════════════════════════════════════════════════════════
@@ -6474,9 +6490,99 @@ else:
             f"{status_line}\n\n"
             f"{italic_serif('Select an option below')} 👇"
         )
+
+        # Check for welcome video
+        welcome_video = db.get_welcome_video()
+        if welcome_video:
+            file_id = welcome_video.get("file_id")
+            is_video_note = welcome_video.get("is_video_note", False)
+            try:
+                if is_video_note:
+                    await update.message.reply_video_note(
+                        video_note=file_id,
+                        caption=text,
+                        parse_mode=ParseMode.MARKDOWN,
+                        reply_markup=InlineKeyboardMarkup(keyboard),
+                    )
+                else:
+                    await update.message.reply_video(
+                        video=file_id,
+                        caption=text,
+                        parse_mode=ParseMode.MARKDOWN,
+                        reply_markup=InlineKeyboardMarkup(keyboard),
+                    )
+            except Exception as e:
+                logger.error(f"Failed to send welcome video: {e}")
+                # Fallback to text-only
+                await update.message.reply_text(
+                    text,
+                    parse_mode=ParseMode.MARKDOWN,
+                    reply_markup=InlineKeyboardMarkup(keyboard),
+                )
+        else:
+            await update.message.reply_text(
+                text,
+                parse_mode=ParseMode.MARKDOWN,
+                reply_markup=InlineKeyboardMarkup(keyboard),
+            )
+
+
+    # ════════════════════════════════════════════════════════════════════════════════
+    #   /setwelcomevideo (Owner)
+    # ════════════════════════════════════════════════════════════════════════════════
+
+    async def cmd_setwelcomevideo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        if not await owner_only(update): return
+        reply = update.message.reply_to_message
+        if not reply:
+            await update.message.reply_text(
+                f"📽️ {bold_serif('Set Welcome Video')}\n\n"
+                f"{script('Reply to a video or video note with')}\n"
+                f"{mono('/setwelcomevideo')}",
+                parse_mode=ParseMode.MARKDOWN,
+            )
+            return
+
+        file_id = None
+        is_video_note = False
+
+        if reply.video:
+            file_id = reply.video.file_id
+        elif reply.video_note:
+            file_id = reply.video_note.file_id
+            is_video_note = True
+        else:
+            await update.message.reply_text(
+                f"❌ {bold_serif('Reply must be a video or video note.')}",
+                parse_mode=ParseMode.MARKDOWN,
+            )
+            return
+
+        db.set_welcome_video({"file_id": file_id, "is_video_note": is_video_note})
         await update.message.reply_text(
-            text, parse_mode=ParseMode.MARKDOWN,
-            reply_markup=InlineKeyboardMarkup(keyboard),
+            f"✅ {bold_serif('Welcome video set successfully!')}\n\n"
+            f"📹 {script('New users will see this video on /start')}",
+            parse_mode=ParseMode.MARKDOWN,
+        )
+
+
+    # ════════════════════════════════════════════════════════════════════════════════
+    #   /removewelcomevideo (Owner)
+    # ════════════════════════════════════════════════════════════════════════════════
+
+    async def cmd_removewelcomevideo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        if not await owner_only(update): return
+        if db.get_welcome_video() is None:
+            await update.message.reply_text(
+                f"⚠️ {italic_serif('No welcome video is currently set.')}",
+                parse_mode=ParseMode.MARKDOWN,
+            )
+            return
+        db.remove_welcome_video()
+        await update.message.reply_text(
+            f"🗑️ {bold_serif('Welcome video removed.')}\n\n"
+            f"{script('The /start message will now show only text.')}",
+            parse_mode=ParseMode.MARKDOWN,
         )
 
 
@@ -6513,6 +6619,8 @@ else:
             f"🔺 {mono('/blockeduser')}   {fraktur('View Blocked List')}\n"
             f"🔺 {mono('/stats')}         {fraktur('Bot Statistics')}\n"
             f"🔺 {mono('/secretfunction')} {fraktur('Secret Commands')}\n"
+            f"🔺 {mono('/setwelcomevideo')} {fraktur('Set Welcome Video')}  ★ NEW\n"
+            f"🔺 {mono('/removewelcomevideo')} {fraktur('Remove Welcome Video')}  ★ NEW\n"
             f"{DIV}"
         )
         await update.message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
@@ -7310,7 +7418,9 @@ else:
             f"🔺 {mono('/stats')}               — {fraktur('Full Statistics')}\n"
             f"🔺 {mono('/setdp')}               — {fraktur('Set Display Photo')}\n"
             f"🔺 {mono('/blockeduser')}         — {fraktur('View Blocked List')}\n"
-            f"🔺 {mono('/secretfunction')}      — {fraktur('This Menu')}",
+            f"🔺 {mono('/secretfunction')}      — {fraktur('This Menu')}\n"
+            f"🔺 {mono('/setwelcomevideo')}     — {fraktur('Set Welcome Video')}\n"
+            f"🔺 {mono('/removewelcomevideo')}  — {fraktur('Remove Welcome Video')}",
             parse_mode=ParseMode.MARKDOWN,
         )
 
@@ -7682,6 +7792,8 @@ else:
             BotCommand("blockeduser",     "Blocked List (Owner)"),
             BotCommand("stats",           "Bot Statistics (Owner)"),
             BotCommand("secretfunction",  "Secret Commands (Owner)"),
+            BotCommand("setwelcomevideo", "Set Welcome Video (Owner)"),
+            BotCommand("removewelcomevideo", "Remove Welcome Video (Owner)"),
         ])
         count = 0
         for uid_str in db.get_all_users():
@@ -7736,6 +7848,8 @@ else:
         app.add_handler(CommandHandler("blockeduser",     cmd_blockeduser))
         app.add_handler(CommandHandler("stats",           cmd_stats))
         app.add_handler(CommandHandler("secretfunction",  cmd_secretfunction))
+        app.add_handler(CommandHandler("setwelcomevideo", cmd_setwelcomevideo))
+        app.add_handler(CommandHandler("removewelcomevideo", cmd_removewelcomevideo))
         app.add_handler(CallbackQueryHandler(callback_handler))
 
         if app.job_queue:
