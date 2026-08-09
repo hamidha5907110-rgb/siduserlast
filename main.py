@@ -6009,8 +6009,8 @@ else:
     OWNER_ID          = 2119464081             # ← replace with your Telegram ID
     SUPPORT_USERNAME  = "@fxrsale"
     MAX_USERBOTS      = int(os.environ.get("MAX_USERBOTS", "50") or "50")
-    TELEGRAM_API_ID   =  33491590,35378028                # ← replace with your API ID
-    TELEGRAM_API_HASH = "35eb3cd440c7ad282cfdc2ce557e37f6","94d5c73a29abe20afe9676e885f7bb2c"  # ← replace with your API hash
+    TELEGRAM_API_ID   =  33491590               # ← replace with your API ID
+    TELEGRAM_API_HASH = "35eb3cd440c7ad282cfdc2ce557e37f6" # ← replace with your API hash
 
     # ════════════════════════════════════════════════════════════════
     #   INLINE DATABASE — JSON file-based storage in ./data/
