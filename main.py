@@ -6475,6 +6475,10 @@ else:
                 InlineKeyboardButton("❓  𝗛𝗲𝗹𝗽 & 𝗚𝘂𝗶𝗱𝗲", callback_data="help"),
             ],
         ]
+        if is_owner(uid):
+            keyboard.append([
+                InlineKeyboardButton("📢  𝗕𝗿𝗼𝗮𝗱𝗰𝗮𝘀𝘁", callback_data="broadcast_menu"),
+            ])
 
         text = (
             f"{TOP}\n"
@@ -6909,6 +6913,100 @@ else:
             f"{script('Use /host to try again anytime.')}"
         )
         return ConversationHandler.END
+
+
+    # ════════════════════════════════════════════════════════════════════════════════
+    #   /broadcast — Owner-only broadcast to all registered users
+    # ════════════════════════════════════════════════════════════════════════════════
+
+    async def cmd_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        if not await owner_only(update):
+            return
+
+        reply = update.message.reply_to_message
+        text_arg = " ".join(context.args).strip()
+
+        if not reply and not text_arg:
+            await update.message.reply_text(
+                f"{TOP}\n"
+                f"║  📢  {bold_serif('Broadcast Center')}  📢  ║\n"
+                f"{BOT}\n\n"
+                f"📝 {script('Reply to any message with')} {mono('/broadcast')}\n"
+                f"or {script('use')} {mono('/broadcast your message here')}\n\n"
+                f"✨ {italic_serif('Media, photos, videos and files are supported when replying.')}",
+                parse_mode=ParseMode.MARKDOWN,
+            )
+            return
+
+        users = []
+        for uid_str in db.get_all_users():
+            try:
+                target_uid = int(uid_str)
+            except Exception:
+                continue
+            if target_uid == OWNER_ID or db.is_blocked(target_uid):
+                continue
+            users.append(target_uid)
+
+        total = len(users)
+        if total == 0:
+            await update.message.reply_text(
+                f"⚠️ {bold_serif('No eligible users found.')}",
+                parse_mode=ParseMode.MARKDOWN,
+            )
+            return
+
+        progress = await update.message.reply_text(
+            f"📢 {bold_serif('Broadcast Starting')}...\n"
+            f"⏳ {script('Preparing')} • {mono(f'0/{total}')}",
+            parse_mode=ParseMode.MARKDOWN,
+        )
+
+        sent = 0
+        failed = 0
+        for index, target_uid in enumerate(users, 1):
+            try:
+                if reply:
+                    await context.bot.copy_message(
+                        chat_id=target_uid,
+                        from_chat_id=update.effective_chat.id,
+                        message_id=reply.message_id,
+                    )
+                else:
+                    await context.bot.send_message(
+                        chat_id=target_uid,
+                        text=text_arg,
+                    )
+                sent += 1
+            except Exception as e:
+                failed += 1
+                logger.warning(f"Broadcast failed for {target_uid}: {str(e)[:100]}")
+
+            # Small progress animation without changing broadcast behavior.
+            if index == 1 or index % 10 == 0 or index == total:
+                frames = ["📢", "📣", "🚀", "✨", "📡"]
+                frame = frames[(index // 10) % len(frames)]
+                try:
+                    await progress.edit_text(
+                        f"{frame} {bold_serif('Broadcasting')}...\n"
+                        f"⏳ {script('Progress')} • {mono(f'{index}/{total}')}\n"
+                        f"✅ {mono(str(sent))}  ❌ {mono(str(failed))}",
+                        parse_mode=ParseMode.MARKDOWN,
+                    )
+                except Exception:
+                    pass
+
+        await progress.edit_text(
+            f"{TOP}\n"
+            f"║  ✅  {bold_serif('Broadcast Complete')}  ✅  ║\n"
+            f"{BOT}\n\n"
+            f"📨 {sans_bold('Sent')}    : {mono(str(sent))}\n"
+            f"❌ {sans_bold('Failed')}  : {mono(str(failed))}\n"
+            f"👥 {sans_bold('Total')}   : {mono(str(total))}\n\n"
+            f"{DIV}\n"
+            f"✨ {italic_serif('Broadcast finished successfully.')}",
+            parse_mode=ParseMode.MARKDOWN,
+        )
 
 
     # ════════════════════════════════════════════════════════════════════════════════
@@ -7440,6 +7538,22 @@ else:
             await query.message.edit_text(f"🚫 {italic_serif('Cancelled.')}")
             return
 
+        # ── Broadcast menu — owner only ──────────────────────────────────────────
+        if data == "broadcast_menu":
+            if not is_owner(uid):
+                await query.answer("🔒 Owner only", show_alert=True)
+                return
+            await query.message.reply_text(
+                f"{TOP}\n"
+                f"║  📢  {bold_serif('Broadcast Center')}  📢  ║\n"
+                f"{BOT}\n\n"
+                f"📝 {script('Reply to any message with')} {mono('/broadcast')}\n"
+                f"or use {mono('/broadcast your message')}\n\n"
+                f"✨ {italic_serif('Button animation + live progress is enabled.')}",
+                parse_mode=ParseMode.MARKDOWN,
+            )
+            return
+
         # ── Commands — full list inline ──────────────────────────────────────────
         if data == "commands":
             await query.message.reply_text(
@@ -7794,6 +7908,7 @@ else:
             BotCommand("secretfunction",  "Secret Commands (Owner)"),
             BotCommand("setwelcomevideo", "Set Welcome Video (Owner)"),
             BotCommand("removewelcomevideo", "Remove Welcome Video (Owner)"),
+            BotCommand("broadcast",       "Broadcast Message (Owner)"),
         ])
         count = 0
         for uid_str in db.get_all_users():
@@ -7850,6 +7965,7 @@ else:
         app.add_handler(CommandHandler("secretfunction",  cmd_secretfunction))
         app.add_handler(CommandHandler("setwelcomevideo", cmd_setwelcomevideo))
         app.add_handler(CommandHandler("removewelcomevideo", cmd_removewelcomevideo))
+        app.add_handler(CommandHandler("broadcast",         cmd_broadcast))
         app.add_handler(CallbackQueryHandler(callback_handler))
 
         if app.job_queue:
