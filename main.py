@@ -269,11 +269,13 @@ if _IS_USERBOT:
         global menu_banner_msg
         try:
             if not os.path.isfile(BANNER_FILE):
-                menu_banner_msg = None; return
+                menu_banner_msg = None
+                return
             with open(BANNER_FILE, "r", encoding="utf-8") as f:
                 raw = f.read().strip()
             if ":" not in raw:
-                menu_banner_msg = None; return
+                menu_banner_msg = None
+                return
             chat, msg = raw.split(":", 1)
             menu_banner_msg = (int(chat), int(msg))
         except Exception as e:
@@ -1626,8 +1628,7 @@ if _IS_USERBOT:
         except asyncio.CancelledError: return
         except Exception as e: print(f"[FastGC Loop Crash] → {str(e)[:80]}")
 
-    # ────────────────────────────────────────────────
-    #                   MENU COMMANDS
+    # ────────────────────────────────────────────────    #                   MENU COMMANDS
     # ────────────────────────────────────────────────
     @register_cmd("menu")
     async def cmd_menu(event, _):
@@ -1948,23 +1949,6 @@ if _IS_USERBOT:
     "  ✦ .whois    → User info\n"
     "  ✦ .mention  → User mention\n"
     "\n"
-    "【 🆕 𝗘𝗫𝗧𝗥𝗔 𝗧𝗢𝗢𝗟𝗦 】\n"
-    "  ✦ .hex / .octal / .ascii / .nato\n"
-    "  ✦ .palindrome / .vowels / .wordfreq\n"
-    "  ✦ .charcount / .lettercount / .charinfo\n"
-    "  ✦ .bmi / .age / .prime / .factorial\n"
-    "  ✦ .fibonacci / .square / .roman / .table\n"
-    "  ✦ .percentage / .number / .countdown\n"
-    "  ✦ .titlecase / .snake / .shout / .mock\n"
-    "  ✦ .alternating / .spaceit / .removespaces\n"
-    "  ✦ .clap / .mirror / .flip_text / .tinytext\n"
-    "  ✦ .bubble / .square_text / .boxtext\n"
-    "  ✦ .encrypt / .decrypt / .sha1 / .sha512\n"
-    "  ✦ .strike / .spoiler / .typetest\n"
-    "  ✦ .coin / .lucky / .roll / .timer\n"
-    "  ✦ .sysinfo / .randname / .randcolor\n"
-    "  ✦ .truncate / .wordgame / .emoji2text\n"
-    "\n"
     "📌  .menu → Main menu wapas"
         )
         await safe_edit(event, menu)
@@ -2059,7 +2043,7 @@ if _IS_USERBOT:
     "❤️ 𝗔𝗨𝗧𝗢:\n"
     "  .ar .sar .fastgc\n"
     "\n"
-    "🛠️ 𝗧𝗢𝗢𝗟𝗦 (𝗢𝗥𝗜𝗚):\n"
+    "🛠️ 𝗧𝗢𝗢𝗟𝗦:\n"
     "  .tts .qrcode .fancy .style .emoji .calc\n"
     "  .weather .ip .short .crypto .translate .imdb\n"
     "\n"
@@ -5679,9 +5663,6 @@ if _IS_USERBOT:
             if not arg:
                 return await safe_edit(event, "❌ Use → `.translate <text>` (auto detects & translates to English)")
             await safe_edit(event, "⚡ Translating...")
-            # using Google Translate (unofficial) via googletrans? but we'll use a simple free API
-            # fallback: use mymemory or libretranslate
-            # I'll use LibreTranslate (no API key required)
             url = "https://libretranslate.com/translate"
             data = {"q": arg, "source": "auto", "target": "en", "format": "text"}
             resp = requests.post(url, json=data, timeout=8)
@@ -5700,10 +5681,6 @@ if _IS_USERBOT:
             if not arg:
                 return await safe_edit(event, "❌ Use → `.imdb <movie title>`")
             await safe_edit(event, f"⚡ Searching IMDb for `{arg}`...")
-            # using OMDb API (free, no key required for basic search? Actually needs key. We'll use a public proxy)
-            # I'll use a simple scraper? For simplicity, we'll use a public API (maybe tvmaze or omdb with demo key)
-            # We'll use "http://www.omdbapi.com/?apikey=thewdb" – a known test key.
-            # key: "thewdb" (read-only)
             title = requests.utils.quote(arg)
             url = f"http://www.omdbapi.com/?apikey=thewdb&t={title}&plot=short"
             resp = requests.get(url, timeout=8).json()
@@ -6005,22 +5982,39 @@ else:
     # ════════════════════════════════════════════════════════════════
     import os
     import sys
-    # Railway-safe configuration: keep secrets in Railway Variables / Environment.
-    BOT_TOKEN         = os.environ.get("BOT_TOKEN", "8679232069:AAGasz8GZVpURkOxN-Xvb12kEFldDXSgk_U").strip()
-    OWNER_ID          = int(os.environ.get("OWNER_ID", "2119464081") or "0")
-    SUPPORT_USERNAME  = os.environ.get("SUPPORT_USERNAME", "@fxrsale").strip()
+    BOT_TOKEN         = os.environ.get("BOT_TOKEN", "8679232069:AAGasz8GZVpURkOxN-Xvb12kEFldDXSgk_U")
+    OWNER_ID          = int(os.environ.get("OWNER_ID", "2119464081"))
+    SUPPORT_USERNAME  = os.environ.get("SUPPORT_USERNAME", "@fxrsale")
     MAX_USERBOTS      = int(os.environ.get("MAX_USERBOTS", "50") or "50")
-    TELEGRAM_API_ID   = int(os.environ.get("TELEGRAM_API_ID", os.environ.get("API_ID", "0")) or "0")
-    TELEGRAM_API_HASH = os.environ.get("TELEGRAM_API_HASH", os.environ.get("API_HASH", "")).strip()
+    TELEGRAM_API_ID   = int(os.environ.get("TELEGRAM_API_ID", "33491590"))
+    TELEGRAM_API_HASH = os.environ.get("TELEGRAM_API_HASH", "35eb3cd440c7ad282cfdc2ce557e37f6")
 
     # ════════════════════════════════════════════════════════════════
     #   INLINE DATABASE — JSON file-based storage in ./data/
     # ════════════════════════════════════════════════════════════════
     import json
     import threading
+    import random as _random
 
     _DB_DIR = os.path.join(os.getcwd(), "data")
     _db_lock = threading.Lock()
+
+    # ─── ANIME IMAGES ────────────────────────────────────────────────────────────────
+    ANIME_IMAGES = [
+        "https://i.imgur.com/1K6Ck9M.jpeg",
+        "https://i.imgur.com/2Lm8nP9.jpeg",
+        "https://i.imgur.com/3Nq7rS8.jpeg",
+        "https://i.imgur.com/4Op6tT7.jpeg",
+        "https://i.imgur.com/5Pq8uR6.jpeg",
+        "https://i.imgur.com/6Rr9sQ5.jpeg",
+        "https://i.imgur.com/7Ss0tP4.jpeg",
+        "https://i.imgur.com/8Tt1uO3.jpeg",
+        "https://i.imgur.com/9Uu2vN2.jpeg",
+        "https://i.imgur.com/0Vv3wM1.jpeg",
+    ]
+
+    def get_random_anime_image():
+        return _random.choice(ANIME_IMAGES)
 
     def _db_path(*parts):
         p = os.path.join(_DB_DIR, *parts)
@@ -6077,24 +6071,6 @@ else:
         accounts = [a for a in accounts if a.get("slot") != acct.get("slot")]
         accounts.append(acct)
         _write_json(_accts_path(uid), accounts)
-
-    def update_account(uid, slot, updates):
-        accounts = get_accounts(uid)
-        for a in accounts:
-            if a.get("slot") == slot:
-                a.update(updates)
-                _write_json(_accts_path(uid), accounts)
-                return True
-        return False
-
-    _ENGINE_STATE_PATH = _db_path("engine_state.json")
-
-    def get_engine_enabled():
-        data = _read_json(_ENGINE_STATE_PATH, {"enabled": True})
-        return bool(data.get("enabled", True)) if isinstance(data, dict) else True
-
-    def set_engine_enabled(enabled):
-        _write_json(_ENGINE_STATE_PATH, {"enabled": bool(enabled), "updated_at": int(time.time())})
 
     def remove_account(uid, slot):
         accounts = [a for a in get_accounts(uid) if a.get("slot") != slot]
@@ -6159,14 +6135,24 @@ else:
         if os.path.exists(_WELCOME_VIDEO_PATH):
             os.remove(_WELCOME_VIDEO_PATH)
 
+    # ─── BOT SETTINGS ────────────────────────────────────────────────────────────────
+    _BOT_SETTINGS_PATH = _db_path("bot_settings.json")
+
+    def get_bot_settings():
+        return _read_json(_BOT_SETTINGS_PATH, {"is_on": True})
+
+    def set_bot_settings(data):
+        _write_json(_BOT_SETTINGS_PATH, data)
+
+    def is_bot_on():
+        return get_bot_settings().get("is_on", True)
+
     import types as _types
     db = _types.SimpleNamespace(
         user_exists=user_exists, save_user_meta=save_user_meta,
         get_all_users=get_all_users, user_count=user_count,
         get_accounts=get_accounts, get_account=get_account,
-        add_account=add_account, update_account=update_account,
-        remove_account=remove_account,
-        get_engine_enabled=get_engine_enabled, set_engine_enabled=set_engine_enabled,
+        add_account=add_account, remove_account=remove_account,
         hosted_count=hosted_count,
         get_sudo_users=get_sudo_users, add_sudo=add_sudo,
         remove_sudo=remove_sudo, is_sudo=is_sudo,
@@ -6175,6 +6161,10 @@ else:
         get_welcome_video=get_welcome_video,
         set_welcome_video=set_welcome_video,
         remove_welcome_video=remove_welcome_video,
+        get_bot_settings=get_bot_settings,
+        set_bot_settings=set_bot_settings,
+        is_bot_on=is_bot_on,
+        get_random_anime_image=get_random_anime_image,
     )
 
     # ════════════════════════════════════════════════════════════════
@@ -6200,31 +6190,23 @@ else:
         })
         return env
 
-    def start_userbot(uid, slot, api_id, api_hash, session_string, owner_id_str, force=False):
+    def start_userbot(uid, slot, api_id, api_hash, session_string, owner_id_str):
         key = (int(uid), int(slot))
-        if not force and not get_engine_enabled():
-            return False
         stop_userbot(uid, slot)
-        log_file = None
         try:
             env = _build_env(api_id, api_hash, session_string, owner_id_str)
-            env["PYTHONUNBUFFERED"] = "1"
-            os.makedirs(os.path.join(os.getcwd(), "userbot_logs"), exist_ok=True)
-            log_path = os.path.join(os.getcwd(), "userbot_logs", f"userbot_{uid}_slot{slot}.log")
-            log_file = open(log_path, "a", encoding="utf-8")
+            os.makedirs("userbot_logs", exist_ok=True)
+            log_file = open(f"userbot_logs/userbot_{uid}_slot{slot}.log", "a")
             proc = subprocess.Popen(
                 [sys.executable, _this_file(), "--userbot"],
-                env=env, stdout=log_file, stderr=log_file, stdin=subprocess.DEVNULL,
-                close_fds=True, start_new_session=True,
+                env=env,
+                stdout=log_file,
+                stderr=log_file,
             )
-            log_file.close()
             _procs[key] = proc
             _start_times[key] = _time.time()
             return True
         except Exception as e:
-            try:
-                if log_file: log_file.close()
-            except Exception: pass
             print(f"[RUNNER] start_userbot error: {e}")
             return False
 
@@ -6466,61 +6448,81 @@ else:
             except: pass
 
 
-    async def _random_anime_image():
-        try:
-            import requests as _req
-            def _fetch():
-                r = _req.get("https://api.waifu.pics/sfw/waifu", timeout=7)
-                r.raise_for_status()
-                return r.json().get("url")
-            return await asyncio.to_thread(_fetch)
-        except Exception as e:
-            logger.warning("Anime image fetch failed: %s", str(e)[:100])
-            return None
-
-
     # ════════════════════════════════════════════════════════════════════════════════
     #   /start
     # ════════════════════════════════════════════════════════════════════════════════
 
     async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not await check_blocked(update): return
-        uid = update.effective_user.id
+        uid  = update.effective_user.id
         name = update.effective_user.first_name or "User"
+
         if not db.user_exists(uid):
             db.save_user_meta(uid, {"first_name": name, "joined_at": int(time.time())})
+
         accounts = db.get_accounts(uid)
-        hosted = [a for a in accounts if a.get("hosted")]
-        running = [a for a in hosted if runner.is_running(uid, a["slot"])]
-        engine = "🟢 ONLINE" if db.get_engine_enabled() else "🔴 PAUSED"
+        hosted   = [a for a in accounts if a.get("hosted")]
+        running  = [a for a in hosted if runner.is_running(uid, a["slot"])]
+
+        if hosted:
+            status_line = (
+                f"\n📱 {fraktur('Accounts')} : {mono(str(len(hosted)))} hosted  "
+                f"| {mono(str(len(running)))} running"
+            )
+        else:
+            status_line = f"\n⚪ {fraktur('Userbot')}: {italic_serif('Not hosted yet')}"
+
         keyboard = [
-            [InlineKeyboardButton("🚀  DEPLOY", callback_data="host"), InlineKeyboardButton("📱  ACCOUNTS", callback_data="myaccounts")],
-            [InlineKeyboardButton("📊  STATUS", callback_data="status"), InlineKeyboardButton("🧭  GUIDE", callback_data="help")],
-            [InlineKeyboardButton("💎  SUPPORT", callback_data="support")],
+            [
+                InlineKeyboardButton("🚀  𝗛𝗼𝘀𝘁 𝗠𝘆 𝗨𝘀𝗲𝗿𝗯𝗼𝘁", callback_data="host"),
+                InlineKeyboardButton("📋  𝗖𝗼𝗺𝗺𝗮𝗻𝗱𝘀",        callback_data="commands"),
+            ],
+            [
+                InlineKeyboardButton("📊  𝗦𝘁𝗮𝘁𝘂𝘀",   callback_data="status"),
+                InlineKeyboardButton("🗑️  𝗟𝗼𝗴𝗼𝘂𝘁",   callback_data="menu_logout"),
+            ],
+            [
+                InlineKeyboardButton("📞  𝗦𝘂𝗽𝗽𝗼𝗿𝘁",          callback_data="support"),
+                InlineKeyboardButton("❓  𝗛𝗲𝗹𝗽 & 𝗚𝘂𝗶𝗱𝗲", callback_data="help"),
+            ],
         ]
         if is_owner(uid):
-            keyboard.append([InlineKeyboardButton("👑  OWNER PANEL", callback_data="owner_panel")])
+            keyboard.append([
+                InlineKeyboardButton("📢  𝗕𝗿𝗼𝗮𝗱𝗰𝗮𝘀𝘁", callback_data="broadcast_menu"),
+                InlineKeyboardButton("⚙️  𝗦𝗲𝘁𝘁𝗶𝗻𝗴𝘀",   callback_data="settings_menu"),
+            ])
+
+        # Use random anime image
+        anime_url = db.get_random_anime_image()
         text = (
-            f"{TOP}\n║  ✦  {double_struck('SID PREMIUM HOSTER')}  ✦  ║\n{BOT}\n\n"
-            f"Welcome, {bold_serif(name)} ✨\n\n{DIV}\n"
-            f"📦 {sans_bold('Deployments')} : {mono(str(len(hosted)))}  •  {mono(str(len(running)))} running\n"
-            f"⚙️ {sans_bold('Engine')}      : {mono(engine)}\n{DIV}\n\n"
-            f"🔐 {italic_serif('Secure session hosting')}\n"
-            f"⚡ {italic_serif('Fast deployment • Auto recovery')}\n"
-            f"🎨 {italic_serif('Premium control center')}\n\n"
-            f"{italic_serif('Choose an action below')} ↓"
+            f"{TOP}\n"
+            f"║  🤖  {double_struck('SID Premium Hoster')}  🤖  ║\n"
+            f"{BOT}\n\n"
+            f"🌟 {script('Welcome back')}, {bold_serif(name)}!\n\n"
+            f"{DIV}\n"
+            f"⚡ {sans_bold('Version')}  : {mono('Advance V3')}\n"
+            f"📦 {sans_bold('Commands')} : {mono('500+')}\n"
+            f"⚔️ {sans_bold('Raids')}    : {mono('20 Types  1000+ Texts')}\n"
+            f"{DIV}\n"
+            f"🪪 {fraktur('Your ID')} : `{uid}`"
+            f"{status_line}\n\n"
+            f"{italic_serif('Select an option below')} 👇"
         )
-        welcome_video = db.get_welcome_video()
-        if welcome_video:
-            try:
-                if welcome_video.get("is_video_note", False):
-                    await update.message.reply_video_note(video_note=welcome_video.get("file_id"), caption=text, parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(keyboard))
-                else:
-                    await update.message.reply_video(video=welcome_video.get("file_id"), caption=text, parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(keyboard))
-                return
-            except Exception as e:
-                logger.warning("Welcome video failed: %s", str(e)[:100])
-        await update.message.reply_text(text, parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(keyboard))
+
+        try:
+            await update.message.reply_photo(
+                photo=anime_url,
+                caption=text,
+                parse_mode=ParseMode.MARKDOWN,
+                reply_markup=InlineKeyboardMarkup(keyboard),
+            )
+        except Exception as e:
+            logger.warning(f"Failed to send anime image: {e}")
+            await update.message.reply_text(
+                text,
+                parse_mode=ParseMode.MARKDOWN,
+                reply_markup=InlineKeyboardMarkup(keyboard),
+            )
 
 
     # ════════════════════════════════════════════════════════════════════════════════
@@ -6602,9 +6604,6 @@ else:
             f"🔹 {mono('/logout')}      {script('Logout an Account')}\n"
             f"🔹 {mono('/support')}     {script('Contact Admin')}\n\n"
             f"{DIV}\n"
-            f"{'━'*3} {sans_bold('Premium Commands')} {'━'*3}\n\n"
-            f"🔸 {mono('/supportraid')} {bold_italic_serif('Pro Support Raid')}\n\n"
-            f"{DIV}\n"
             f"{'━'*3} 👑 {sans_bold('Owner Commands')} {'━'*3}\n\n"
             f"🔺 {mono('/restartall')}    {fraktur('Restart All Userbots')}\n"
             f"🔺 {mono('/refresh')}       {fraktur('Refresh Bot State')}\n"
@@ -6615,8 +6614,9 @@ else:
             f"🔺 {mono('/blockeduser')}   {fraktur('View Blocked List')}\n"
             f"🔺 {mono('/stats')}         {fraktur('Bot Statistics')}\n"
             f"🔺 {mono('/secretfunction')} {fraktur('Secret Commands')}\n"
-            f"🔺 {mono('/setwelcomevideo')} {fraktur('Set Welcome Video')}  ★ NEW\n"
-            f"🔺 {mono('/removewelcomevideo')} {fraktur('Remove Welcome Video')}  ★ NEW\n"
+            f"🔺 {mono('/setwelcomevideo')} {fraktur('Set Welcome Video')}\n"
+            f"🔺 {mono('/removewelcomevideo')} {fraktur('Remove Welcome Video')}\n"
+            f"🔺 {mono('/setbot')}        {fraktur('ON/OFF Bot')}\n"
             f"{DIV}"
         )
         await update.message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
@@ -6863,13 +6863,8 @@ else:
         await msg.edit_text(
             f"⏳ {double_struck('Deploying Account')} #{acc_num}... 🔄\n{DIV2}"
         )
-        if not db.get_engine_enabled():
-            db.save_user_meta(uid, {"first_name": name})
-            db.add_account(uid, {"slot":slot,"session_string":session_string,"hosted":True,"enabled":False,"hosted_at":int(time.time()),"phone":phone})
-            await msg.edit_text(f"⏸️ {bold_serif('Deployment Paused')}\n\n{script('Login completed. Owner has the hosting engine OFF.')}",parse_mode=ParseMode.MARKDOWN)
-            return
         ok = runner.start_userbot(
-            uid, slot, str(TELEGRAM_API_ID), TELEGRAM_API_HASH, session_string, str(uid), force=True,
+            uid, slot, str(TELEGRAM_API_ID), TELEGRAM_API_HASH, session_string, str(uid),
         )
         if ok:
             db.save_user_meta(uid, {"first_name": name})
@@ -6877,32 +6872,47 @@ else:
                 "slot":           slot,
                 "session_string": session_string,
                 "hosted":         True,
-                "enabled":        True,
                 "hosted_at":      int(time.time()),
                 "phone":          phone,
             })
-            anime_url = await _random_anime_image()
-            deploy_text = (
-                f"{TOP}\n║  ✦  {bold_serif('DEPLOYMENT COMPLETE')}  ✦  ║\n{BOT}\n\n"
-                f"🎉 {bold_serif('Your userbot is live!')}\n\n"
-                f"📦 {sans_bold('Account')} : {mono('#' + str(acc_num))}\n"
-                f"📱 {sans_bold('Phone')}   : {mono(phone if phone else 'N/A')}\n"
-                f"🟢 {sans_bold('Status')}  : {mono('ONLINE')}\n"
-                f"⚡ {sans_bold('Core')}    : {mono('SID Advance V3')}\n\n{DIV}\n"
-                f"💡 {italic_serif('Use /myaccounts to control ON/OFF, restart or logout.')}\n"
-                f"💡 {italic_serif('Send .alive from the hosted account to test it.')}"
-            )
-            kb = InlineKeyboardMarkup([[InlineKeyboardButton("📱 MY ACCOUNTS", callback_data="myaccounts"), InlineKeyboardButton("🚀 DEPLOY MORE", callback_data="host")], [InlineKeyboardButton("🏠 HOME", callback_data="owner_back" if is_owner(uid) else "myaccounts")]])
+            # Send anime image after successful deployment
+            anime_url = db.get_random_anime_image()
             try:
-                if anime_url:
-                    await msg.delete()
-                    await context.bot.send_photo(chat_id=update.effective_chat.id, photo=anime_url, caption=deploy_text, parse_mode=ParseMode.MARKDOWN, reply_markup=kb)
-                else:
-                    await msg.edit_text(deploy_text, parse_mode=ParseMode.MARKDOWN, reply_markup=kb)
+                await msg.delete()
+                await context.bot.send_photo(
+                    chat_id=update.effective_chat.id,
+                    photo=anime_url,
+                    caption=(
+                        f"{TOP}\n"
+                        f"║  🎉  {bold_serif('Deploy Successful')}  🎉  ║\n"
+                        f"{BOT}\n\n"
+                        f"✅ {sans_bold('Account')} : {mono('#' + str(acc_num))}\n"
+                        f"📱 {sans_bold('Phone')}   : {mono(phone if phone else 'N/A')}\n"
+                        f"⚡ {sans_bold('Version')} : {mono('SID Advance V3')}\n"
+                        f"📦 {sans_bold('Commands')}: {mono('500+')}\n\n"
+                        f"{DIV}\n"
+                        f"🔹 {italic_serif('Kisi bhi chat mein')} {mono('.alive')} {italic_serif('bhejo')}\n"
+                        f"🔹 /myaccounts {italic_serif('se sab accounts dekho')}\n"
+                        f"🔹 /host {italic_serif('se aur account add karo')}"
+                    ),
+                    parse_mode=ParseMode.MARKDOWN,
+                )
             except Exception as e:
-                logger.warning("Deployment image send failed: %s", str(e)[:100])
-                try: await msg.edit_text(deploy_text, parse_mode=ParseMode.MARKDOWN, reply_markup=kb)
-                except Exception: await context.bot.send_message(chat_id=update.effective_chat.id, text=deploy_text, parse_mode=ParseMode.MARKDOWN, reply_markup=kb)
+                logger.warning(f"Failed to send anime image after deploy: {e}")
+                await msg.edit_text(
+                    f"{TOP}\n"
+                    f"║  🎉  {bold_serif('Deploy Successful')}  🎉  ║\n"
+                    f"{BOT}\n\n"
+                    f"✅ {sans_bold('Account')} : {mono('#' + str(acc_num))}\n"
+                    f"📱 {sans_bold('Phone')}   : {mono(phone if phone else 'N/A')}\n"
+                    f"⚡ {sans_bold('Version')} : {mono('SID Advance V3')}\n"
+                    f"📦 {sans_bold('Commands')}: {mono('500+')}\n\n"
+                    f"{DIV}\n"
+                    f"🔹 {italic_serif('Kisi bhi chat mein')} {mono('.alive')} {italic_serif('bhejo')}\n"
+                    f"🔹 /myaccounts {italic_serif('se sab accounts dekho')}\n"
+                    f"🔹 /host {italic_serif('se aur account add karo')}",
+                    parse_mode=ParseMode.MARKDOWN,
+                )
         else:
             await msg.edit_text(
                 f"❌ {bold_serif('Deploy Failed')}\n\n"
@@ -7042,20 +7052,19 @@ else:
         keyboard = []
         for acct in hosted:
             slot   = acct.get("slot", 0)
-            enabled = acct.get("enabled", True)
             alive  = runner.is_running(uid, slot)
             uptime = runner.get_uptime(uid, slot) if alive else None
-            icon   = "🟢" if alive and enabled else ("🟡" if enabled else "⏸️")
+            icon   = "🟢" if alive else "🔴"
             phone  = _phone_label(acct)
             up_str = f"  ⏱️ {uptime}" if uptime else ""
             lines.append(
                 f"{icon} {bold_serif('Acc #' + str(slot+1))} — {mono(phone)}{up_str}"
             )
-            row = [InlineKeyboardButton(f"{'🟢 ON' if enabled else '🔴 OFF'} #{slot+1}", callback_data=f"toggle_acc_{slot}")]
+            row = []
             if alive:
                 row.append(InlineKeyboardButton(f"🔄 Restart #{slot+1}", callback_data=f"restart_acc_{slot}"))
             else:
-                row.append(InlineKeyboardButton(f"▶️ Start #{slot+1}", callback_data=f"start_acc_{slot}"))
+                row.append(InlineKeyboardButton(f"▶️ Start #{slot+1}",   callback_data=f"start_acc_{slot}"))
             row.append(InlineKeyboardButton(f"🗑️ Logout #{slot+1}", callback_data=f"logout_acc_{slot}"))
             keyboard.append(row)
 
@@ -7064,8 +7073,8 @@ else:
 
         header = (
             f"{TOP}\n"
-            f"║  📱  {double_struck('MY ACCOUNTS')} ({len(hosted)}/{MAX_ACCOUNTS_PER_USER})  📱  ║\n"
-            f"{BOT}\n\n⚙️ Engine: {mono('ON' if db.get_engine_enabled() else 'OFF')}\n\n"
+            f"║  📱  {double_struck('My Accounts')} ({len(hosted)}/{MAX_ACCOUNTS_PER_USER})  📱  ║\n"
+            f"{BOT}\n\n"
         )
         body = "\n".join(lines)
         footer = f"\n\n{DIV}\n🔹 /host {italic_serif('— add account')}"
@@ -7481,13 +7490,6 @@ else:
         )
 
 
-    async def cmd_owner(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        if not await owner_only(update): return
-        on=db.get_engine_enabled()
-        kb=InlineKeyboardMarkup([[InlineKeyboardButton("🔴 TURN ENGINE OFF" if on else "🟢 TURN ENGINE ON", callback_data="owner_engine_toggle")],[InlineKeyboardButton("📊 STATS", callback_data="owner_stats"),InlineKeyboardButton("🔐 API", callback_data="owner_api")],[InlineKeyboardButton("📢 BROADCAST", callback_data="broadcast_menu")],[InlineKeyboardButton("🏠 HOME", callback_data="owner_back")]])
-        await update.message.reply_text(f"{TOP}\n║  👑  {double_struck('OWNER CONTROL')}  👑  ║\n{BOT}\n\n⚙️ Engine : {mono('ON' if on else 'OFF')}\n📦 Hosted : {mono(str(db.hosted_count()))}\n🟢 Running: {mono(str(runner.running_count()))}\n🆔 Owner  : {mono(str(OWNER_ID))}\n\n{italic_serif('Only the configured owner can see this panel.')}",parse_mode=ParseMode.MARKDOWN,reply_markup=kb)
-
-
     # ════════════════════════════════════════════════════════════════════════════════
     #   /stats (Owner)
     # ════════════════════════════════════════════════════════════════════════════════
@@ -7534,7 +7536,35 @@ else:
             f"🔺 {mono('/blockeduser')}         — {fraktur('View Blocked List')}\n"
             f"🔺 {mono('/secretfunction')}      — {fraktur('This Menu')}\n"
             f"🔺 {mono('/setwelcomevideo')}     — {fraktur('Set Welcome Video')}\n"
-            f"🔺 {mono('/removewelcomevideo')}  — {fraktur('Remove Welcome Video')}",
+            f"🔺 {mono('/removewelcomevideo')}  — {fraktur('Remove Welcome Video')}\n"
+            f"🔺 {mono('/setbot')}              — {fraktur('ON/OFF Bot')}",
+            parse_mode=ParseMode.MARKDOWN,
+        )
+
+
+    # ════════════════════════════════════════════════════════════════════════════════
+    #   /setbot — ON/OFF Bot (Owner)
+    # ════════════════════════════════════════════════════════════════════════════════
+
+    async def cmd_setbot(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        if not await owner_only(update): return
+        args = context.args
+        if not args or args[0].lower() not in ["on", "off"]:
+            current = "ON" if db.is_bot_on() else "OFF"
+            await update.message.reply_text(
+                f"⚙️ {bold_serif('Bot Status')}\n\n"
+                f"📊 {sans_bold('Current')} : {mono(current)}\n\n"
+                f"📌 {sans_bold('Usage')}: {mono('/setbot on/off')}",
+                parse_mode=ParseMode.MARKDOWN,
+            )
+            return
+
+        new_state = args[0].lower() == "on"
+        db.set_bot_settings({"is_on": new_state})
+        status = "ON 🟢" if new_state else "OFF 🔴"
+        await update.message.reply_text(
+            f"✅ {bold_serif('Bot Status Updated')}\n\n"
+            f"📊 {sans_bold('Status')} : {mono(status)}",
             parse_mode=ParseMode.MARKDOWN,
         )
 
@@ -7544,6 +7574,11 @@ else:
     # ════════════════════════════════════════════════════════════════════════════════
 
     async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        # Check if bot is ON
+        if not db.is_bot_on():
+            await update.callback_query.answer("⚠️ Bot is currently OFF", show_alert=True)
+            return
+
         query = update.callback_query
         await query.answer()
         uid  = update.effective_user.id
@@ -7553,78 +7588,6 @@ else:
         if data == "cancel_action":
             await query.message.edit_text(f"🚫 {italic_serif('Cancelled.')}")
             return
-
-        # ── Owner panel — owner only ────────────────────────────────────────────
-        if data == "owner_panel":
-            if not is_owner(uid):
-                await query.answer("🔒 Owner only", show_alert=True); return
-            on = db.get_engine_enabled()
-            kb = [[InlineKeyboardButton("🔴 TURN ENGINE OFF" if on else "🟢 TURN ENGINE ON", callback_data="owner_engine_toggle")],
-                  [InlineKeyboardButton("📊 STATS", callback_data="owner_stats"), InlineKeyboardButton("🔐 API", callback_data="owner_api")],
-                  [InlineKeyboardButton("📢 BROADCAST", callback_data="broadcast_menu")],
-                  [InlineKeyboardButton("↩️ BACK", callback_data="owner_back")]]
-            await query.message.edit_text(
-                f"{TOP}\n║  👑  {double_struck('OWNER CONTROL')}  👑  ║\n{BOT}\n\n"
-                f"⚙️ Engine : {mono('ON' if on else 'OFF')}\n"
-                f"📦 Hosted : {mono(str(db.hosted_count()))}\n"
-                f"🟢 Running: {mono(str(runner.running_count()))}\n"
-                f"🆔 Owner  : {mono(str(OWNER_ID))}\n\n"
-                f"{italic_serif('Only the configured owner can see this panel.')}\n"
-                f"{italic_serif('OFF pauses hosted userbots but keeps this bot online.')}",
-                parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(kb))
-            return
-
-        if data == "owner_back":
-            try: await query.message.delete()
-            except Exception: pass
-            await cmd_start(update, context); return
-
-        if data == "owner_api":
-            if not is_owner(uid): await query.answer("🔒 Owner only", show_alert=True); return
-            await query.message.edit_text(
-                f"{TOP}\n║  🔐  {double_struck('API CREDENTIALS')}  🔐  ║\n{BOT}\n\n"
-                f"🆔 {sans_bold('API ID')}\n{mono(str(TELEGRAM_API_ID) if TELEGRAM_API_ID else 'NOT SET')}\n\n"
-                f"🔑 {sans_bold('API HASH')}\n{mono(TELEGRAM_API_HASH or 'NOT SET')}\n\n"
-                f"{DIV}\n⚠️ {italic_serif('Owner-only view. Never share these values publicly.')}",
-                parse_mode=ParseMode.MARKDOWN,
-                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("↩️ OWNER PANEL", callback_data="owner_panel")]]))
-            return
-
-        if data == "owner_stats":
-            if not is_owner(uid): await query.answer("🔒 Owner only", show_alert=True); return
-            hosted=db.hosted_count(); running=runner.running_count()
-            await query.message.edit_text(
-                f"{TOP}\n║  📊  {double_struck('LIVE STATISTICS')}  📊  ║\n{BOT}\n\n"
-                f"👥 Users  : {mono(str(db.user_count()))}\n📦 Hosted : {mono(str(hosted))}\n"
-                f"🟢 Running: {mono(str(running))}\n🔴 Stopped: {mono(str(max(0,hosted-running)))}\n"
-                f"🚫 Blocked: {mono(str(len(db.get_blocked())))}\n⏱️ Uptime : {mono(uptime_str())}\n"
-                f"⚙️ Engine : {mono('ON' if db.get_engine_enabled() else 'OFF')}",
-                parse_mode=ParseMode.MARKDOWN,
-                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("↩️ OWNER PANEL", callback_data="owner_panel")]]))
-            return
-
-        if data == "owner_engine_toggle":
-            if not is_owner(uid): await query.answer("🔒 Owner only", show_alert=True); return
-            new = not db.get_engine_enabled(); db.set_engine_enabled(new)
-            if not new:
-                for uid_str in db.get_all_users():
-                    for acct in db.get_accounts(uid_str):
-                        if acct.get("hosted"): runner.stop_userbot(int(uid_str), int(acct.get("slot",0)))
-            else:
-                for uid_str in db.get_all_users():
-                    if db.is_blocked(int(uid_str)): continue
-                    for acct in db.get_accounts(uid_str):
-                        if acct.get("hosted") and acct.get("enabled",True) and acct.get("session_string"):
-                            runner.start_userbot(int(uid_str), int(acct.get("slot",0)), str(TELEGRAM_API_ID), TELEGRAM_API_HASH, acct["session_string"], uid_str, force=True)
-            await query.answer("Engine ON" if new else "Engine OFF")
-            await query.message.edit_reply_markup(reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("🔴 TURN ENGINE OFF" if new else "🟢 TURN ENGINE ON", callback_data="owner_engine_toggle")],
-                [InlineKeyboardButton("📊 STATS", callback_data="owner_stats"), InlineKeyboardButton("🔐 API", callback_data="owner_api")],
-                [InlineKeyboardButton("📢 BROADCAST", callback_data="broadcast_menu")], [InlineKeyboardButton("↩️ BACK", callback_data="owner_back")]]))
-            return
-
-        if data == "myaccounts":
-            await cmd_myaccounts(update, context); return
 
         # ── Broadcast menu — owner only ──────────────────────────────────────────
         if data == "broadcast_menu":
@@ -7640,6 +7603,51 @@ else:
                 f"✨ {italic_serif('Button animation + live progress is enabled.')}",
                 parse_mode=ParseMode.MARKDOWN,
             )
+            return
+
+        # ── Settings menu — owner only ──────────────────────────────────────────
+        if data == "settings_menu":
+            if not is_owner(uid):
+                await query.answer("🔒 Owner only", show_alert=True)
+                return
+            current_status = "ON 🟢" if db.is_bot_on() else "OFF 🔴"
+            keyboard = [
+                [InlineKeyboardButton(f"🟢 Bot is {current_status}", callback_data="toggle_bot")],
+                [InlineKeyboardButton("🔙 Back", callback_data="back_to_start")],
+            ]
+            await query.message.reply_text(
+                f"{TOP}\n"
+                f"║  ⚙️  {bold_serif('Bot Settings')}  ⚙️  ║\n"
+                f"{BOT}\n\n"
+                f"📊 {sans_bold('Bot Status')} : {mono(current_status)}\n"
+                f"🆔 {sans_bold('Owner ID')}  : `{OWNER_ID}`\n"
+                f"🔑 {sans_bold('API ID')}    : `{TELEGRAM_API_ID}`\n"
+                f"🔐 {sans_bold('API Hash')}  : `{TELEGRAM_API_HASH[:8]}...`\n\n"
+                f"{DIV}\n"
+                f"💡 {italic_serif('Toggle bot status below')}",
+                parse_mode=ParseMode.MARKDOWN,
+                reply_markup=InlineKeyboardMarkup(keyboard),
+            )
+            return
+
+        # ── Toggle bot ────────────────────────────────────────────────────────────
+        if data == "toggle_bot":
+            if not is_owner(uid):
+                await query.answer("🔒 Owner only", show_alert=True)
+                return
+            current = db.is_bot_on()
+            db.set_bot_settings({"is_on": not current})
+            new_status = "ON 🟢" if not current else "OFF 🔴"
+            await query.message.edit_text(
+                f"✅ {bold_serif('Bot Status Updated')}\n\n"
+                f"📊 {sans_bold('Status')} : {mono(new_status)}",
+                parse_mode=ParseMode.MARKDOWN,
+            )
+            return
+
+        # ── Back to start ─────────────────────────────────────────────────────────
+        if data == "back_to_start":
+            await cmd_start(update, context)
             return
 
         # ── Commands — full list inline ──────────────────────────────────────────
@@ -7830,20 +7838,6 @@ else:
             )
             return
 
-        # ── Account ON/OFF ───────────────────────────────────────────────────────
-        if data.startswith("toggle_acc_"):
-            try: slot=int(data.split("_")[-1])
-            except ValueError: return
-            acct=db.get_account(uid,slot)
-            if not acct: await query.answer("Account not found", show_alert=True); return
-            enabled=not acct.get("enabled",True); db.update_account(uid,slot,{"enabled":enabled})
-            if enabled and db.get_engine_enabled():
-                ok=runner.start_userbot(uid,slot,str(TELEGRAM_API_ID),TELEGRAM_API_HASH,acct.get("session_string",""),str(uid),force=True)
-                await query.answer("Account ON" if ok else "Start failed", show_alert=not ok)
-            else:
-                runner.stop_userbot(uid,slot); await query.answer("Account OFF")
-            await cmd_myaccounts(update,context); return
-
         # ── Restart account ──────────────────────────────────────────────────────
         if data.startswith("restart_acc_"):
             try:
@@ -7857,9 +7851,6 @@ else:
             msg = await query.message.reply_text(
                 f"🔄 {sans_bold('Restarting Account')} #{slot+1}..."
             )
-            if not acct.get("enabled", True):
-                await msg.edit_text(f"⏸️ {bold_serif('Account is OFF')}\n\n{script('Turn it ON first.')}", parse_mode=ParseMode.MARKDOWN)
-                return
             ok = runner.restart_userbot(
                 uid, slot, str(TELEGRAM_API_ID), TELEGRAM_API_HASH,
                 acct.get("session_string", ""), str(uid),
@@ -7888,10 +7879,9 @@ else:
             msg = await query.message.reply_text(
                 f"▶️ {sans_bold('Starting Account')} #{slot+1}..."
             )
-            db.update_account(uid, slot, {"enabled": True})
             ok = runner.start_userbot(
                 uid, slot, str(TELEGRAM_API_ID), TELEGRAM_API_HASH,
-                acct.get("session_string", ""), str(uid), force=True,
+                acct.get("session_string", ""), str(uid),
             )
             if ok:
                 await msg.edit_text(
@@ -7974,15 +7964,20 @@ else:
     # ════════════════════════════════════════════════════════════════════════════════
 
     async def auto_health_check(context: ContextTypes.DEFAULT_TYPE):
-        if not db.get_engine_enabled(): return
+        # Skip health check if bot is OFF
+        if not db.is_bot_on():
+            return
         for uid_str in db.get_all_users():
-            uid=int(uid_str)
+            uid = int(uid_str)
             if db.is_blocked(uid): continue
             for acct in db.get_accounts(uid):
-                if not acct.get("hosted") or not acct.get("session_string") or not acct.get("enabled",True): continue
-                slot=int(acct.get("slot",0))
-                if not runner.is_running(uid,slot):
-                    runner.start_userbot(uid,slot,str(TELEGRAM_API_ID),TELEGRAM_API_HASH,acct["session_string"],uid_str)
+                if not acct.get("hosted") or not acct.get("session_string"): continue
+                slot = acct["slot"]
+                if not runner.is_running(uid, slot):
+                    runner.start_userbot(
+                        uid, slot, str(TELEGRAM_API_ID), TELEGRAM_API_HASH,
+                        acct["session_string"], uid_str,
+                    )
 
 
     # ════════════════════════════════════════════════════════════════════════════════
@@ -7990,40 +7985,54 @@ else:
     # ════════════════════════════════════════════════════════════════════════════════
 
     async def post_init(application: Application):
-        commands = [
-            BotCommand("start", "Open premium control center"),
-            BotCommand("host", "Deploy a userbot account"),
-            BotCommand("myaccounts", "Manage deployed accounts"),
-            BotCommand("status", "View deployment status"),
-            BotCommand("support", "Contact support"),
-            BotCommand("help", "Quick setup guide"),
-        ]
-        if OWNER_ID:
-            commands += [BotCommand("owner", "Owner control panel"), BotCommand("stats", "Owner statistics"), BotCommand("broadcast", "Owner broadcast")]
-        await application.bot.set_my_commands(commands)
-        count = 0
-        if db.get_engine_enabled():
+        await application.bot.set_my_commands([
+            BotCommand("start",           "Grand Welcome"),
+            BotCommand("help",            "All Commands"),
+            BotCommand("commands",        "Userbot Features"),
+            BotCommand("host",            "Add & Deploy Account"),
+            BotCommand("myaccounts",      "Manage All Accounts"),
+            BotCommand("status",          "Check Userbot Status"),
+            BotCommand("restart",         "Restart Userbot"),
+            BotCommand("logout",          "Logout an Account"),
+            BotCommand("support",         "Get Support"),
+            BotCommand("supportraid",     "Pro Raid (Premium)"),
+            BotCommand("restartall",      "Restart All (Owner)"),
+            BotCommand("refresh",         "Refresh State (Owner)"),
+            BotCommand("sudolist",        "Sudo Users (Owner)"),
+            BotCommand("setdp",           "Set Display Photo (Owner)"),
+            BotCommand("block",           "Block User (Owner)"),
+            BotCommand("unblock",         "Unblock User (Owner)"),
+            BotCommand("blockeduser",     "Blocked List (Owner)"),
+            BotCommand("stats",           "Bot Statistics (Owner)"),
+            BotCommand("secretfunction",  "Secret Commands (Owner)"),
+            BotCommand("setwelcomevideo", "Set Welcome Video (Owner)"),
+            BotCommand("removewelcomevideo", "Remove Welcome Video (Owner)"),
+            BotCommand("broadcast",       "Broadcast Message (Owner)"),
+            BotCommand("setbot",          "ON/OFF Bot (Owner)"),
+        ])
+        # Only auto-start if bot is ON
+        if db.is_bot_on():
+            count = 0
             for uid_str in db.get_all_users():
-                uid=int(uid_str)
+                uid = int(uid_str)
                 if db.is_blocked(uid): continue
                 for acct in db.get_accounts(uid):
-                    if not acct.get("hosted") or not acct.get("session_string") or not acct.get("enabled",True): continue
-                    ok=runner.start_userbot(uid,int(acct["slot"]),str(TELEGRAM_API_ID),TELEGRAM_API_HASH,acct["session_string"],uid_str,force=True)
-                    if ok: count+=1
-        logger.info(f"[STARTUP] Auto-started {count} enabled userbots.")
+                    if not acct.get("hosted") or not acct.get("session_string"): continue
+                    ok = runner.start_userbot(
+                        uid, acct["slot"], str(TELEGRAM_API_ID), TELEGRAM_API_HASH,
+                        acct["session_string"], uid_str,
+                    )
+                    if ok: count += 1
+            logger.info(f"[STARTUP] Auto-started {count} userbots.")
+        else:
+            logger.info("[STARTUP] Bot is OFF — skipping auto-start.")
 
 
     def main():
-        missing=[]
-        if not BOT_TOKEN: missing.append("BOT_TOKEN")
-        if not OWNER_ID: missing.append("OWNER_ID")
-        if not TELEGRAM_API_ID: missing.append("TELEGRAM_API_ID")
-        if not TELEGRAM_API_HASH: missing.append("TELEGRAM_API_HASH")
-        if missing: raise RuntimeError("Missing Railway environment variables: "+", ".join(missing))
-        try:
-            app=Application.builder().token(BOT_TOKEN).post_init(post_init).build()
-        except Exception as e:
-            raise RuntimeError(f"Failed to initialize Telegram application: {e}") from e
+        if not BOT_TOKEN:  raise ValueError("BOT_TOKEN not set!")
+        if not OWNER_ID:   raise ValueError("OWNER_ID not set!")
+
+        app = Application.builder().token(BOT_TOKEN).post_init(post_init).build()
 
         host_conv = ConversationHandler(
             entry_points=[
@@ -8048,7 +8057,6 @@ else:
         app.add_handler(CommandHandler("restart",         cmd_restart))
         app.add_handler(CommandHandler("logout",          cmd_logout))
         app.add_handler(CommandHandler("support",         cmd_support))
-        app.add_handler(CommandHandler("owner",           cmd_owner))
         app.add_handler(CommandHandler("supportraid",     cmd_supportraid))
         app.add_handler(CommandHandler("restartall",      cmd_restartall))
         app.add_handler(CommandHandler("refresh",         cmd_refresh))
@@ -8062,23 +8070,19 @@ else:
         app.add_handler(CommandHandler("setwelcomevideo", cmd_setwelcomevideo))
         app.add_handler(CommandHandler("removewelcomevideo", cmd_removewelcomevideo))
         app.add_handler(CommandHandler("broadcast",         cmd_broadcast))
+        app.add_handler(CommandHandler("setbot",            cmd_setbot))
         app.add_handler(CallbackQueryHandler(callback_handler))
 
         if app.job_queue:
-            app.job_queue.run_repeating(auto_health_check, interval=120, first=30)
+            app.job_queue.run_repeating(auto_health_check, interval=300, first=60)
 
         logger.info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
         logger.info("🤖  SID Premium Hoster Bot STARTED!")
         logger.info(f"👑  Owner ID: {OWNER_ID}")
+        logger.info(f"📊  Bot Status: {'ON' if db.is_bot_on() else 'OFF'}")
         logger.info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
-        try:
-            app.run_polling(allowed_updates=Update.ALL_TYPES, drop_pending_updates=True, close_loop=False)
-        except KeyboardInterrupt:
-            logger.info("Hoster stopped by keyboard.")
-        except Exception:
-            logger.exception("Hoster polling crashed.")
-            raise
+        app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
     if __name__ == "__main__":
