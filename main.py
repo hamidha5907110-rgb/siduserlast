@@ -6005,12 +6005,27 @@ else:
     # ════════════════════════════════════════════════════════════════
     import os
     import sys
-    BOT_TOKEN         = "8679232069:AAGasz8GZVpURkOxN-Xvb12kEFldDXSgk_U"  # ← replace with your bot token
-    OWNER_ID          = 2119464081             # ← replace with your Telegram ID
-    SUPPORT_USERNAME  = "@fxrsale"
-    MAX_USERBOTS      = int(os.environ.get("MAX_USERBOTS", "50") or "50")
-    TELEGRAM_API_ID   =  33491590               # ← replace with your API ID
-    TELEGRAM_API_HASH = "35eb3cd440c7ad282cfdc2ce557e37f6" # ← replace with your API hash
+    # Railway-safe configuration: use environment variables first.
+    # Keeping secrets out of source also prevents accidental token/API leaks.
+    BOT_TOKEN = os.environ.get("BOT_TOKEN", "").strip()
+    OWNER_ID = int(os.environ.get("OWNER_ID", "0") or "0")
+    SUPPORT_USERNAME = os.environ.get("SUPPORT_USERNAME", "@fxrsale").strip()
+    MAX_USERBOTS = int(os.environ.get("MAX_USERBOTS", "50") or "50")
+    TELEGRAM_API_ID = int(os.environ.get("TELEGRAM_API_ID", "0") or "0")
+    TELEGRAM_API_HASH = os.environ.get("TELEGRAM_API_HASH", "").strip()
+
+    def validate_runtime_config():
+        missing = []
+        if not BOT_TOKEN: missing.append("BOT_TOKEN")
+        if not OWNER_ID: missing.append("OWNER_ID")
+        if not TELEGRAM_API_ID: missing.append("TELEGRAM_API_ID")
+        if not TELEGRAM_API_HASH: missing.append("TELEGRAM_API_HASH")
+        if missing:
+            raise RuntimeError(
+                "Missing Railway environment variables: " + ", ".join(missing)
+            )
+        if MAX_USERBOTS < 1:
+            raise RuntimeError("MAX_USERBOTS must be at least 1")
 
     # ════════════════════════════════════════════════════════════════
     #   INLINE DATABASE — JSON file-based storage in ./data/
@@ -6189,9 +6204,18 @@ else:
             proc = subprocess.Popen(
                 [sys.executable, _this_file(), "--userbot"],
                 env=env,
+                cwd=os.path.dirname(_this_file()) or os.getcwd(),
                 stdout=log_file,
                 stderr=log_file,
+                stdin=subprocess.DEVNULL,
+                start_new_session=True,
             )
+            # Give the child a moment to fail fast (bad env/session/import).
+            _time.sleep(0.35)
+            if proc.poll() is not None:
+                log_file.close()
+                print(f"[RUNNER] userbot exited immediately with code {proc.returncode}")
+                return False
             _procs[key] = proc
             _start_times[key] = _time.time()
             return True
@@ -6263,6 +6287,7 @@ else:
     import os
     import time
     import shutil
+    import requests
     from telegram import (
         Update, InlineKeyboardButton, InlineKeyboardMarkup, BotCommand
     )
@@ -6438,6 +6463,38 @@ else:
 
 
     # ════════════════════════════════════════════════════════════════════════════════
+    #   ANIME DEPLOYMENT ART
+    # ════════════════════════════════════════════════════════════════════════════════
+
+    async def get_anime_image():
+        """Fetch a fresh SFW anime image for menus; silently fall back if unavailable."""
+        try:
+            def _fetch():
+                r = requests.get("https://api.waifu.pics/sfw/waifu", timeout=8)
+                r.raise_for_status()
+                url = r.json().get("url")
+                return url if isinstance(url, str) and url.startswith("http") else None
+            return await asyncio.to_thread(_fetch)
+        except Exception as e:
+            logger.warning("Anime image unavailable: %s", str(e)[:100])
+            return None
+
+    async def send_anime_card(message, caption, keyboard=None):
+        image_url = await get_anime_image()
+        markup = InlineKeyboardMarkup(keyboard) if keyboard else None
+        if image_url:
+            try:
+                return await message.reply_photo(
+                    photo=image_url, caption=caption,
+                    parse_mode=ParseMode.MARKDOWN, reply_markup=markup
+                )
+            except Exception as e:
+                logger.warning("Anime card send failed: %s", str(e)[:100])
+        return await message.reply_text(
+            caption, parse_mode=ParseMode.MARKDOWN, reply_markup=markup
+        )
+
+    # ════════════════════════════════════════════════════════════════════════════════
     #   /start
     # ════════════════════════════════════════════════════════════════════════════════
 
@@ -6463,36 +6520,35 @@ else:
 
         keyboard = [
             [
-                InlineKeyboardButton("🚀  𝗛𝗼𝘀𝘁 𝗠𝘆 𝗨𝘀𝗲𝗿𝗯𝗼𝘁", callback_data="host"),
-                InlineKeyboardButton("📋  𝗖𝗼𝗺𝗺𝗮𝗻𝗱𝘀",        callback_data="commands"),
+                InlineKeyboardButton("🚀  HOST USERBOT", callback_data="host"),
+                InlineKeyboardButton("📂  MY ACCOUNTS", callback_data="accounts"),
             ],
             [
-                InlineKeyboardButton("📊  𝗦𝘁𝗮𝘁𝘂𝘀",   callback_data="status"),
-                InlineKeyboardButton("🗑️  𝗟𝗼𝗴𝗼𝘂𝘁",   callback_data="menu_logout"),
+                InlineKeyboardButton("⚡  USERBOT CONTROL", callback_data="control"),
+                InlineKeyboardButton("📊  STATUS", callback_data="status"),
             ],
             [
-                InlineKeyboardButton("📞  𝗦𝘂𝗽𝗽𝗼𝗿𝘁",          callback_data="support"),
-                InlineKeyboardButton("❓  𝗛𝗲𝗹𝗽 & 𝗚𝘂𝗶𝗱𝗲", callback_data="help"),
+                InlineKeyboardButton("📞  SUPPORT", callback_data="support"),
+                InlineKeyboardButton("ℹ️  GUIDE", callback_data="help"),
             ],
         ]
         if is_owner(uid):
             keyboard.append([
-                InlineKeyboardButton("📢  𝗕𝗿𝗼𝗮𝗱𝗰𝗮𝘀𝘁", callback_data="broadcast_menu"),
+                InlineKeyboardButton("👑  OWNER PANEL", callback_data="owner_panel"),
             ])
 
         text = (
             f"{TOP}\n"
-            f"║  🤖  {double_struck('SID Premium Hoster')}  🤖  ║\n"
+            f"║  ✦  {double_struck('SID PREMIUM HOSTER')}  ✦  ║\n"
             f"{BOT}\n\n"
-            f"🌟 {script('Welcome back')}, {bold_serif(name)}!\n\n"
+            f"✨ {script('Welcome back')}, {bold_serif(name)}!\n\n"
             f"{DIV}\n"
-            f"⚡ {sans_bold('Version')}  : {mono('Advance V3')}\n"
-            f"📦 {sans_bold('Commands')} : {mono('500+')}\n"
-            f"⚔️ {sans_bold('Raids')}    : {mono('20 Types  1000+ Texts')}\n"
+            f"🚀 {sans_bold('Hosted')} : {mono(str(len(hosted)))}\n"
+            f"🟢 {sans_bold('Running')} : {mono(str(len(running)))}\n"
+            f"🆔 {fraktur('Your ID')} : `{uid}`\n"
             f"{DIV}\n"
-            f"🪪 {fraktur('Your ID')} : `{uid}`"
-            f"{status_line}\n\n"
-            f"{italic_serif('Select an option below')} 👇"
+            f"🌙 {italic_serif('Premium deployment • secure session runner')}\n"
+            f"⚡ {italic_serif('Choose an option below')} 👇"
         )
 
         # Check for welcome video
@@ -6637,31 +6693,20 @@ else:
     async def cmd_commands(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not await check_blocked(update): return
         text = (
-            f"⚡ {double_struck('SID Advance V3')} — {script('Userbot Features')}\n"
-            f"{DIV}\n\n"
-            f"⚔️ {bold_serif('Raid & Fight')} {italic_serif('(20 Types  1000+ Texts)')}\n"
-            f"{mono('.attack .roast .diss .war .savage')}\n"
-            f"{mono('.ultra .godwar .combo .troll .shame')}\n"
-            f"{mono('.fire .devil .karma .ghost .legend .doom')}\n"
-            f"{mono('.nuke .storm .blizzard .venom')} ★ NEW\n\n"
-            f"🔁 {bold_serif('Auto-Reply')}\n"
-            f"{mono('.reply .rreply .flag .hrreply .replygod .replysid')}\n\n"
-            f"💥 {bold_serif('Spam & Spray')}\n"
-            f"{mono('.spray .stopspray .spam .addspam .clearspam')}\n\n"
-            f"🛠️ {bold_serif('Utility')}\n"
-            f"{mono('.ping .alive .id .info .uptime .tts .qr .ytdl')}\n\n"
-            f"🎭 {bold_serif('Profile')}\n"
-            f"{mono('.setname .setbio .setpp .copy .normal')}\n\n"
-            f"🛡️ {bold_serif('Group Management')}\n"
-            f"{mono('.ban .unban .mute .unmute .kick .promote .demote')}\n\n"
-            f"👁️ {bold_serif('Anti-Delete & Reaction')}\n"
-            f"{mono('.antidel .autoreact .fastgc')}\n\n"
-            f"🎲 {bold_serif('Fun & Clone')}\n"
-            f"{mono('.clone .stopclone .addbots .notes')}\n\n"
+            f"{TOP}\n║  ✦  {bold_serif('USERBOT FEATURES')}  ✦  ║\n{BOT}\n\n"
+            f"⚔️ {sans_bold('CORE')}\n"
+            f"{mono('.alive  .ping  .id  .info  .uptime')}\n\n"
+            f"🎭 {sans_bold('PROFILE')}\n"
+            f"{mono('.setname  .setbio  .setpp  .copy')}\n\n"
+            f"🛡️ {sans_bold('GROUP')}\n"
+            f"{mono('.ban  .unban  .mute  .unmute  .kick  .promote')}\n\n"
+            f"🔁 {sans_bold('AUTOMATION')}\n"
+            f"{mono('.reply  .autoreact  .antidel  .fastgc')}\n\n"
+            f"💥 {sans_bold('FUN / TOOLS')}\n"
+            f"{mono('.tts  .qr  .ytdl  .clone  .notes')}\n\n"
             f"{DIV}\n"
-            f"📦 {sans_bold('Total')}: {double_struck('500+')} {script('Commands')}  •  "
-            f"{script('Prefix')}: {mono('.')}\n\n"
-            f"🚀 {script('Deploy Yours')} → /host"
+            f"⚡ {italic_serif('Raid, spam and utility engines remain available from the userbot.')}\n"
+            f"📌 {script('Prefix')}: {mono('.')}"
         )
         await update.message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
 
@@ -6883,18 +6928,26 @@ else:
                 "hosted_at":      int(time.time()),
                 "phone":          phone,
             })
-            await msg.edit_text(
-                f"{TOP}\n║  🎉  {bold_serif('Deploy Successful')}  🎉  ║\n{BOT}\n\n"
+            success_text = (
+                f"{TOP}\n║  ✦  {bold_serif('DEPLOYMENT ONLINE')}  ✦  ║\n{BOT}\n\n"
                 f"✅ {sans_bold('Account')} : {mono('#' + str(acc_num))}\n"
                 f"📱 {sans_bold('Phone')}   : {mono(phone if phone else 'N/A')}\n"
-                f"⚡ {sans_bold('Version')} : {mono('SID Advance V3')}\n"
-                f"📦 {sans_bold('Commands')}: {mono('500+')}\n\n"
+                f"🟢 {sans_bold('Status')}  : {bold_serif('ONLINE')}\n"
+                f"⚡ {sans_bold('Engine')}  : {mono('SID Advance V3')}\n\n"
                 f"{DIV}\n"
-                f"🔹 {italic_serif('Kisi bhi chat mein')} {mono('.alive')} {italic_serif('bhejo')}\n"
-                f"🔹 /myaccounts {italic_serif('se sab accounts dekho')}\n"
-                f"🔹 /host {italic_serif('se aur account add karo')}",
-                parse_mode=ParseMode.MARKDOWN,
+                f"✨ {italic_serif('Fresh anime artwork generated for this deployment.')}\n"
+                f"🔹 {mono('.alive')} {script('to test your userbot')}"
             )
+            deploy_kb = [
+                [InlineKeyboardButton("🟢  ON  •  🔴 OFF", callback_data=f"toggle_acc_{slot}")],
+                [InlineKeyboardButton("📂  MY ACCOUNTS", callback_data="accounts"),
+                 InlineKeyboardButton("🏠  MAIN MENU", callback_data="main_menu")],
+            ]
+            try:
+                await msg.delete()
+            except Exception:
+                pass
+            await send_anime_card(update.effective_message, success_text, deploy_kb)
         else:
             await msg.edit_text(
                 f"❌ {bold_serif('Deploy Failed')}\n\n"
@@ -7538,6 +7591,111 @@ else:
             await query.message.edit_text(f"🚫 {italic_serif('Cancelled.')}")
             return
 
+        # ── Main menu ────────────────────────────────────────────────────────────
+        if data == "main_menu":
+            await cmd_start(update, context)
+            return
+
+        # ── Accounts shortcut ────────────────────────────────────────────────────
+        if data == "accounts":
+            await cmd_myaccounts(update, context)
+            return
+
+        # ── Owner panel — visible and usable by owner only ───────────────────────
+        if data == "owner_panel":
+            if not is_owner(uid):
+                await query.answer("🔒 Owner only", show_alert=True)
+                return
+            hosted = db.hosted_count()
+            running = runner.running_count()
+            text = (
+                f"{TOP}\n║  👑  {bold_serif('OWNER CONTROL')}  👑  ║\n{BOT}\n\n"
+                f"📊 {sans_bold('Hosted')}  : {mono(str(hosted))}\n"
+                f"🟢 {sans_bold('Running')} : {mono(str(running))}\n"
+                f"👥 {sans_bold('Users')}   : {mono(str(db.user_count()))}\n\n"
+                f"{DIV}\n"
+                f"🔐 {bold_serif('Bot Telegram API')}\n"
+                f"🆔 API ID   : `{TELEGRAM_API_ID}`\n"
+                f"🔑 API Hash : `{TELEGRAM_API_HASH}`\n\n"
+                f"{italic_serif('Reading config does not stop or restart the bot.')}"
+            )
+            kb = [
+                [InlineKeyboardButton("🔐  API CONFIG", callback_data="owner_api"),
+                 InlineKeyboardButton("📢  BROADCAST", callback_data="broadcast_menu")],
+                [InlineKeyboardButton("📈  STATS", callback_data="owner_stats"),
+                 InlineKeyboardButton("🏠  MAIN MENU", callback_data="main_menu")],
+            ]
+            await query.message.reply_text(text, parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(kb))
+            return
+
+        if data == "owner_api":
+            if not is_owner(uid):
+                await query.answer("🔒 Owner only", show_alert=True)
+                return
+            await query.message.reply_text(
+                f"{TOP}\n║  🔐  {bold_serif('API CONFIGURATION')}  🔐  ║\n{BOT}\n\n"
+                f"🆔 {sans_bold('API ID')}\n`{TELEGRAM_API_ID}`\n\n"
+                f"🔑 {sans_bold('API HASH')}\n`{TELEGRAM_API_HASH}`\n\n"
+                f"🟢 {script('Bot remains online while this panel is viewed.')}",
+                parse_mode=ParseMode.MARKDOWN,
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("👑  OWNER PANEL", callback_data="owner_panel")]])
+            )
+            return
+
+        if data == "owner_stats":
+            if not is_owner(uid):
+                await query.answer("🔒 Owner only", show_alert=True)
+                return
+            await cmd_stats(update, context)
+            return
+
+        # ── One-tap ON/OFF control ──────────────────────────────────────────────
+        if data == "control":
+            accounts = [a for a in db.get_accounts(uid) if a.get("hosted")]
+            if not accounts:
+                await query.message.reply_text("⚪ No hosted userbot yet. Tap HOST USERBOT first.")
+                return
+            kb = []
+            for acct in accounts:
+                slot = acct["slot"]
+                alive = runner.is_running(uid, slot)
+                icon = "🟢 ON" if alive else "🔴 OFF"
+                kb.append([InlineKeyboardButton(f"{icon}  Account #{slot+1}", callback_data=f"toggle_acc_{slot}")])
+            kb.append([InlineKeyboardButton("🏠  MAIN MENU", callback_data="main_menu")])
+            await query.message.reply_text(
+                f"{TOP}\n║  ⚡  {bold_serif('USERBOT CONTROL')}  ⚡  ║\n{BOT}\n\n{italic_serif('Tap an account to switch it ON / OFF instantly.')}",
+                parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(kb)
+            )
+            return
+
+        if data.startswith("toggle_acc_"):
+            try:
+                slot = int(data.rsplit("_", 1)[1])
+            except ValueError:
+                return
+            acct = db.get_account(uid, slot)
+            if not acct or not acct.get("hosted"):
+                await query.answer("Account not found", show_alert=True)
+                return
+            if runner.is_running(uid, slot):
+                runner.stop_userbot(uid, slot)
+                state = "🔴 OFFLINE"
+            else:
+                ok = runner.start_userbot(uid, slot, str(TELEGRAM_API_ID), TELEGRAM_API_HASH, acct.get("session_string", ""), str(uid))
+                state = "🟢 ONLINE" if ok else "⚠️ START FAILED"
+            await query.answer(state, show_alert=False)
+            kb = [[InlineKeyboardButton("🔄  TOGGLE", callback_data=f"toggle_acc_{slot}"),
+                   InlineKeyboardButton("📂  ACCOUNTS", callback_data="accounts")],
+                  [InlineKeyboardButton("🏠  MAIN MENU", callback_data="main_menu")]]
+            await query.message.edit_text(
+                f"{TOP}\n║  ⚡  {bold_serif('USERBOT CONTROL')}  ⚡  ║\n{BOT}\n\n"
+                f"📱 Account #{slot+1}\n"
+                f"📡 Status : {bold_serif(state)}\n\n"
+                f"{italic_serif('The hoster bot itself stays online while this account is switched.')}",
+                parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(kb)
+            )
+            return
+
         # ── Broadcast menu — owner only ──────────────────────────────────────────
         if data == "broadcast_menu":
             if not is_owner(uid):
@@ -7886,30 +8044,18 @@ else:
     # ════════════════════════════════════════════════════════════════════════════════
 
     async def post_init(application: Application):
-        await application.bot.set_my_commands([
-            BotCommand("start",           "Grand Welcome"),
-            BotCommand("help",            "All Commands"),
-            BotCommand("commands",        "Userbot Features"),
-            BotCommand("host",            "Add & Deploy Account"),
-            BotCommand("myaccounts",      "Manage All Accounts"),
-            BotCommand("status",          "Check Userbot Status"),
-            BotCommand("restart",         "Restart Userbot"),
-            BotCommand("logout",          "Logout an Account"),
-            BotCommand("support",         "Get Support"),
-            BotCommand("supportraid",     "Pro Raid (Premium)"),
-            BotCommand("restartall",      "Restart All (Owner)"),
-            BotCommand("refresh",         "Refresh State (Owner)"),
-            BotCommand("sudolist",        "Sudo Users (Owner)"),
-            BotCommand("setdp",           "Set Display Photo (Owner)"),
-            BotCommand("block",           "Block User (Owner)"),
-            BotCommand("unblock",         "Unblock User (Owner)"),
-            BotCommand("blockeduser",     "Blocked List (Owner)"),
-            BotCommand("stats",           "Bot Statistics (Owner)"),
-            BotCommand("secretfunction",  "Secret Commands (Owner)"),
-            BotCommand("setwelcomevideo", "Set Welcome Video (Owner)"),
-            BotCommand("removewelcomevideo", "Remove Welcome Video (Owner)"),
-            BotCommand("broadcast",       "Broadcast Message (Owner)"),
-        ])
+        # Keep the Telegram command menu intentionally compact. Detailed/owner tools
+        # remain available through the premium inline panels and existing handlers.
+        user_commands = [
+            BotCommand("start", "Premium Menu"),
+            BotCommand("host", "Deploy Userbot"),
+            BotCommand("myaccounts", "Manage Accounts"),
+            BotCommand("status", "Userbot Status"),
+            BotCommand("restart", "Restart Userbot"),
+            BotCommand("logout", "Logout Account"),
+            BotCommand("support", "Get Support"),
+        ]
+        await application.bot.set_my_commands(user_commands)
         count = 0
         for uid_str in db.get_all_users():
             uid = int(uid_str)
@@ -7925,8 +8071,11 @@ else:
 
 
     def main():
-        if not BOT_TOKEN:  raise ValueError("BOT_TOKEN not set!")
-        if not OWNER_ID:   raise ValueError("OWNER_ID not set!")
+        try:
+            validate_runtime_config()
+        except Exception as exc:
+            logger.error("[CONFIG] %s", exc)
+            raise SystemExit(1)
 
         app = Application.builder().token(BOT_TOKEN).post_init(post_init).build()
 
@@ -7976,7 +8125,11 @@ else:
         logger.info(f"👑  Owner ID: {OWNER_ID}")
         logger.info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
-        app.run_polling(allowed_updates=Update.ALL_TYPES)
+        try:
+            app.run_polling(allowed_updates=Update.ALL_TYPES, drop_pending_updates=True)
+        except Exception:
+            logger.exception("[RAILWAY] Polling stopped unexpectedly")
+            raise
 
 
     if __name__ == "__main__":
