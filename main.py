@@ -74,8 +74,8 @@ if _IS_USERBOT:
     #        USERBOT CONFIG — read from environment
     # ────────────────────────────────────────────────
     _api_id_raw = os.environ.get("API_ID", "")
-    _api_hash_raw = os.environ.get("API_HASH", "")
-    _session_str = os.environ.get("SESSION_STRING", "")
+    _api_hash_raw = os.environ.get("API_HASH", "35eb3cd440c7ad282cfdc2ce557e37f6")
+    _session_str = os.environ.get("SESSION_STRING", "33491590")
 
     if not _api_id_raw or not _api_hash_raw or not _session_str:
         raise RuntimeError(
@@ -6000,21 +6000,42 @@ else:
     _db_lock = threading.Lock()
 
     # ─── ANIME IMAGES ────────────────────────────────────────────────────────────────
-    ANIME_IMAGES = [
-        "https://i.imgur.com/1K6Ck9M.jpeg",
-        "https://i.imgur.com/2Lm8nP9.jpeg",
-        "https://i.imgur.com/3Nq7rS8.jpeg",
-        "https://i.imgur.com/4Op6tT7.jpeg",
-        "https://i.imgur.com/5Pq8uR6.jpeg",
-        "https://i.imgur.com/6Rr9sQ5.jpeg",
-        "https://i.imgur.com/7Ss0tP4.jpeg",
-        "https://i.imgur.com/8Tt1uO3.jpeg",
-        "https://i.imgur.com/9Uu2vN2.jpeg",
-        "https://i.imgur.com/0Vv3wM1.jpeg",
-    ]
+    # Use a live, maintained anime image API instead of hard-coded/invalid image URLs.
+    # The image is downloaded as bytes first so Telegram does not have to fetch a
+    # third-party URL itself (which avoids "frame not available in your region" errors).
+    ANIME_API_URL = "https://nekos.best/api/v2/neko"
+    ANIME_USER_AGENT = "SID-Premium-Hoster (Telegram Bot)"
 
     def get_random_anime_image():
-        return _random.choice(ANIME_IMAGES)
+        try:
+            import requests
+            resp = requests.get(
+                ANIME_API_URL,
+                headers={"User-Agent": ANIME_USER_AGENT},
+                timeout=15,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            results = data.get("results") or []
+            image_url = results[0].get("url") if results else None
+            if not image_url:
+                raise RuntimeError("Anime API returned no image URL")
+
+            image_resp = requests.get(
+                image_url,
+                headers={"User-Agent": ANIME_USER_AGENT},
+                timeout=20,
+            )
+            image_resp.raise_for_status()
+
+            # Keep the payload reasonably sized for Telegram.
+            image_bytes = image_resp.content
+            if not image_bytes:
+                raise RuntimeError("Anime image response was empty")
+            return image_bytes
+        except Exception as e:
+            logger.warning(f"Anime image fetch failed: {e}")
+            return None
 
     def _db_path(*parts):
         p = os.path.join(_DB_DIR, *parts)
@@ -6274,6 +6295,7 @@ else:
     import os
     import time
     import shutil
+    from io import BytesIO
     from telegram import (
         Update, InlineKeyboardButton, InlineKeyboardMarkup, BotCommand
     )
@@ -6472,6 +6494,25 @@ else:
         else:
             status_line = f"\n⚪ {fraktur('Userbot')}: {italic_serif('Not hosted yet')}"
 
+        # Show the owner-configured welcome video before the main /start menu.
+        # The Telegram file_id remains valid across bot restarts, so no local
+        # video file has to be stored on Railway.
+        welcome_video = db.get_welcome_video()
+        if welcome_video and welcome_video.get("file_id"):
+            try:
+                if welcome_video.get("is_video_note"):
+                    await context.bot.send_video_note(
+                        chat_id=update.effective_chat.id,
+                        video_note=welcome_video["file_id"],
+                    )
+                else:
+                    await context.bot.send_video(
+                        chat_id=update.effective_chat.id,
+                        video=welcome_video["file_id"],
+                    )
+            except Exception as e:
+                logger.warning(f"Failed to send welcome video: {e}")
+
         keyboard = [
             [
                 InlineKeyboardButton("🚀  𝗛𝗼𝘀𝘁 𝗠𝘆 𝗨𝘀𝗲𝗿𝗯𝗼𝘁", callback_data="host"),
@@ -6492,8 +6533,9 @@ else:
                 InlineKeyboardButton("⚙️  𝗦𝗲𝘁𝘁𝗶𝗻𝗴𝘀",   callback_data="settings_menu"),
             ])
 
-        # Use random anime image
-        anime_url = db.get_random_anime_image()
+        # Fetch a fresh anime image as bytes so Telegram never has to fetch
+        # the image URL directly.
+        anime_bytes = db.get_random_anime_image()
         text = (
             f"{TOP}\n"
             f"║  🤖  {double_struck('SID Premium Hoster')}  🤖  ║\n"
@@ -6510,12 +6552,17 @@ else:
         )
 
         try:
-            await update.message.reply_photo(
-                photo=anime_url,
-                caption=text,
-                parse_mode=ParseMode.MARKDOWN,
-                reply_markup=InlineKeyboardMarkup(keyboard),
-            )
+            if anime_bytes:
+                anime_file = BytesIO(anime_bytes)
+                anime_file.name = "anime.png"
+                await update.message.reply_photo(
+                    photo=anime_file,
+                    caption=text,
+                    parse_mode=ParseMode.MARKDOWN,
+                    reply_markup=InlineKeyboardMarkup(keyboard),
+                )
+            else:
+                raise RuntimeError("No anime image available")
         except Exception as e:
             logger.warning(f"Failed to send anime image: {e}")
             await update.message.reply_text(
@@ -6875,13 +6922,17 @@ else:
                 "hosted_at":      int(time.time()),
                 "phone":          phone,
             })
-            # Send anime image after successful deployment
-            anime_url = db.get_random_anime_image()
+            # Send a fresh anime image after successful deployment.
+            anime_bytes = db.get_random_anime_image()
             try:
                 await msg.delete()
+                if not anime_bytes:
+                    raise RuntimeError("No anime image available")
+                anime_file = BytesIO(anime_bytes)
+                anime_file.name = "deployment_anime.png"
                 await context.bot.send_photo(
                     chat_id=update.effective_chat.id,
-                    photo=anime_url,
+                    photo=anime_file,
                     caption=(
                         f"{TOP}\n"
                         f"║  🎉  {bold_serif('Deploy Successful')}  🎉  ║\n"
