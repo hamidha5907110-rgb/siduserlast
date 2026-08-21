@@ -6007,8 +6007,8 @@ else:
     import sys
     # Railway-safe configuration: use environment variables first.
     # Keeping secrets out of source also prevents accidental token/API leaks.
-    BOT_TOKEN = os.environ.get("BOT_TOKEN", "").strip()
-    OWNER_ID = int(os.environ.get("OWNER_ID", "0") or "0")
+    BOT_TOKEN = os.environ.get("BOT_TOKEN", "8679232069:AAGasz8GZVpURkOxN-Xvb12kEFldDXSgk_U").strip()
+    OWNER_ID = int(os.environ.get("OWNER_ID", "2119464081") or "0")
     SUPPORT_USERNAME = os.environ.get("SUPPORT_USERNAME", "@fxrsale").strip()
     MAX_USERBOTS = int(os.environ.get("MAX_USERBOTS", "50") or "50")
     TELEGRAM_API_ID = int(os.environ.get("TELEGRAM_API_ID", "0") or "0")
