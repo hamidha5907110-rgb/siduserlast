@@ -5986,8 +5986,8 @@ else:
     OWNER_ID          = int(os.environ.get("OWNER_ID", "2119464081"))
     SUPPORT_USERNAME  = os.environ.get("SUPPORT_USERNAME", "@fxrsale")
     MAX_USERBOTS      = int(os.environ.get("MAX_USERBOTS", "50") or "50")
-    TELEGRAM_API_ID   = int(os.environ.get("TELEGRAM_API_ID", "33491590"))
-    TELEGRAM_API_HASH = os.environ.get("TELEGRAM_API_HASH", "35eb3cd440c7ad282cfdc2ce557e37f6")
+    TELEGRAM_API_ID   = int(os.environ.get("TELEGRAM_API_ID", "35378028"))
+    TELEGRAM_API_HASH = os.environ.get("TELEGRAM_API_HASH", "94d5c73a29abe20afe9676e885f7bb2c")
 
     # ════════════════════════════════════════════════════════════════
     #   INLINE DATABASE — JSON file-based storage in ./data/
