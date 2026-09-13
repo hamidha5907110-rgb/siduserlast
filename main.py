@@ -5982,7 +5982,7 @@ else:
     # ════════════════════════════════════════════════════════════════
     import os
     import sys
-    BOT_TOKEN         = os.environ.get("BOT_TOKEN", "8961186063:AAEyiW_Gil_jS4CPwrL-kRljOa3CUSwDvY0")
+    BOT_TOKEN         = os.environ.get("BOT_TOKEN", "8889832400:AAHhsQcyLdFl4IqV2qCJfwlDN_HYPRL6N_4")
     OWNER_ID          = int(os.environ.get("OWNER_ID", "2119464081"))
     SUPPORT_USERNAME  = os.environ.get("SUPPORT_USERNAME", "@fxrsale")
     MAX_USERBOTS      = int(os.environ.get("MAX_USERBOTS", "50") or "50")
