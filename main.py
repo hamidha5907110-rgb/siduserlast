@@ -73,7 +73,7 @@ if _IS_USERBOT:
     # ────────────────────────────────────────────────
     #        USERBOT CONFIG — read from environment
     # ────────────────────────────────────────────────
-    _api_id_raw = os.environ.get("API_ID", "")
+    _api_id_raw = os.environ.get("API_ID", "33491590")
     _api_hash_raw = os.environ.get("API_HASH", "35eb3cd440c7ad282cfdc2ce557e37f6")
     _session_str = os.environ.get("SESSION_STRING", "33491590")
 
@@ -5982,9 +5982,9 @@ else:
     # ════════════════════════════════════════════════════════════════
     import os
     import sys
-    BOT_TOKEN         = os.environ.get("BOT_TOKEN", "7575426595:AAERSagZLuB0-x1iPg1YCsnbQfPnZG6EPqE")
-    OWNER_ID          = int(os.environ.get("OWNER_ID", "6133172474"))
-    SUPPORT_USERNAME  = os.environ.get("SUPPORT_USERNAME", "@danggvivek")
+    BOT_TOKEN         = os.environ.get("BOT_TOKEN", "8653377116:AAGOlJ5FP_3ki_kWAJJG1_t0OoeoYwk0kKY")
+    OWNER_ID          = int(os.environ.get("OWNER_ID", "8684812026"))
+    SUPPORT_USERNAME  = os.environ.get("SUPPORT_USERNAME", "Wkcvx")
     MAX_USERBOTS      = int(os.environ.get("MAX_USERBOTS", "50") or "50")
     TELEGRAM_API_ID   = int(os.environ.get("TELEGRAM_API_ID", "35378028"))
     TELEGRAM_API_HASH = os.environ.get("TELEGRAM_API_HASH", "94d5c73a29abe20afe9676e885f7bb2c")
