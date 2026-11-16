@@ -5982,12 +5982,12 @@ else:
     # ════════════════════════════════════════════════════════════════
     import os
     import sys
-    BOT_TOKEN         = os.environ.get("BOT_TOKEN", "8653377116:AAGOlJ5FP_3ki_kWAJJG1_t0OoeoYwk0kKY")
+    BOT_TOKEN         = os.environ.get("BOT_TOKEN", "8653377116:AAHdPNs3HuGz5v_pWFMYQNP98zzYp4w_GwY")
     OWNER_ID          = int(os.environ.get("OWNER_ID", "8684812026"))
-    SUPPORT_USERNAME  = os.environ.get("SUPPORT_USERNAME", "Wkcvx")
+    SUPPORT_USERNAME  = os.environ.get("SUPPORT_USERNAME", "yugchod")
     MAX_USERBOTS      = int(os.environ.get("MAX_USERBOTS", "50") or "50")
-    TELEGRAM_API_ID   = int(os.environ.get("TELEGRAM_API_ID", "35378028"))
-    TELEGRAM_API_HASH = os.environ.get("TELEGRAM_API_HASH", "94d5c73a29abe20afe9676e885f7bb2c")
+    TELEGRAM_API_ID   = int(os.environ.get("TELEGRAM_API_ID", "33491590"))
+    TELEGRAM_API_HASH = os.environ.get("TELEGRAM_API_HASH", "935eb3cd440c7ad282cfdc2ce557e37f6")
 
     # ════════════════════════════════════════════════════════════════
     #   INLINE DATABASE — JSON file-based storage in ./data/
